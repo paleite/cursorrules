@@ -34,6 +34,7 @@
   - Examples:
     - Use `bg-primary text-primary-foreground hover:bg-primary/90` instead of `bg-blue-500 text-white hover:bg-blue-600`.
 - Use `cva` from `class-variance-authority` for **component styling**.
+
   - Example:
 
     ```typescript
@@ -54,7 +55,7 @@
 ## TypeScript
 
 - Prefer `type` over `interface`.
-- Avoid `any`, `as`, and `is` wherever possible. Use `zod` for strict type validation.
+- Avoid `any`, `as`, and `is` wherever possible and instead use `zod` for strict type validation.
 - Leverage utility types like `Partial`, `Pick`, and `Omit` for conciseness.
 
 ---
@@ -62,7 +63,9 @@
 ## Zod
 
 - Use **PascalCase** for schema names.
+
   - Example:
+
     ```typescript
     export const UserResponseSchema = z.strictObject({
       id: z.string(),
@@ -71,7 +74,22 @@
 
     export type UserResponse = z.infer<typeof UserResponseSchema>;
     ```
+
+- Always use `z.strictObject` for object schemas.
 - Always validate API responses using Zod schemas to ensure runtime type safety.
+- Always use `z.infer` to extract the type from the schema.
+- For array-schemas, create a new schema for the item type.
+
+  - Example:
+
+    ```typescript
+    export const EntitySchema = z.strictObject({
+      id: z.string(),
+      name: z.string(),
+    });
+
+    export const EntitiesSchema = z.array(EntitySchema);
+    ```
 
 ---
 
@@ -81,9 +99,12 @@
 
 - Use `mutationKey` and `queryKey` to ensure **precise cache invalidation**.
 - Keep **fetcher** and **transformer functions** separate from React Query hooks for better modularity.
+
   - Example:
 
     ```typescript
+    import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
+
     export const fetchUsers = async (): Promise<User[]> => {
       const response = await api.get("/users");
       return response.data;
@@ -92,8 +113,10 @@
     const transformUsers = (users: User[]): User[] =>
       users.map((user) => ({ ...user, isAdmin: user.role === "admin" }));
 
-    export const useUsersQuery = (options?: UseQueryOptions<User[]>) =>
-      useQuery(["users"], fetchUsers, {
+    export const useUsersQuery = (options?: UseQueryOptions<User[], Error>) =>
+      useQuery<User[], Error>({
+        queryKey: ["users"],
+        queryFn: fetchUsers,
         select: transformUsers,
         ...options,
       });
@@ -226,7 +249,7 @@ const mutation: (operation: Operation) => Promise<void>;
 
 By following these best practices, you can maintain a clean, type-safe, and modular codebase. Combining Zod with React Query ensures runtime validation, precise caching, and enhanced maintainability, especially when working with dynamic data sources like Chromia Postchain.
 
----------------------
+---
 
 # React-query examples from another project
 
