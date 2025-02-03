@@ -3,17 +3,84 @@
 ## File Structure
 
 - Use **kebab-case** for all filenames.
+- Use `.tsx` for all TypeScript files that contain JSX syntax. If the TypeScript file doesn't contain any JSX, use `.ts` for TypeScript files.
+- Test-files should be named like `[filename].test.ts` or `[filename].test.tsx`.
+
+### Folder structure
+
+If a filename is index.ts, it should either only contain re-exports (barrel exports), or no re-exports at all.
+
+<!-- TODO: Expand on Naming Conventions: While kebab-case is clear, consider clarifying rules for different file types (e.g. test files, configuration files). -->
+
+<!-- TODO: Modularization: Recommend a folder structure that scales well as the project grows. -->
+
+### Modularization
+
+A good folder structure is:
+
+<!--
+TODO: Clarify what belongs where and why.
+
+shadcn's shared components are in the components/ui/ folder.
+next.js app is in the app/ folder.
+
+where should the following code go:
+
+- custom components that are only used in one page
+- custom components that are only used together with one parent component (e.g. DialogHeader only makes sense in a Dialog component)
+- custom shared components, e.g. a site-wide footer.
+- hooks
+- react-query hooks (queries and mutations)
+- react-hook-form hooks?
+- react contexts?
+- zustand-stores
+- zod-schemas
+- api client initialization
+- api fetching
+- providers
+- functions for formatting, converting, etc.
+- constants, such as "DEFAULT_TIMEOUT" or "MAX_RETRIES"
+
+what should be in the lib/ folder?
+
+
+
+```
+src/
+  app/ <- nextjs app
+  components/
+    ui/ <- shadcn components
+  lib/ <- TODO: What belongs here?
+    postchain-client.ts <- postchain client
+    utils.ts <- utility functions
+  query/
+    queries.ts <- react query queries
+    mutations.ts <- react query mutations
+  schemas/ <- zod schemas
+  hooks/ <- react hooks
+  stores/ <- zustand stores
+```
+-->
 
 ---
 
 ## Code Readability
 
 - Write code to be more **readable than writable**.
+  - Examples:
+    - <!-- TODO: -->
+- Use **consistent naming** for all components, variables, functions, etc.
+- When an identifier's name doesn't describe its purpose, or its purpose has changed, rename it.
 - When generating code (but not when editing existing code), always prefer **explicit and clear syntax** over shorthand
   - Examples:
     - Use `React.FunctionComponent` instead of `React.FC` when generating a new component.
     - Use `className="button-primary"` instead of `className="btn-p"` when naming new classes.
     - Use full prop names like `disabled={true}` instead of just `disabled` when suggesting new props.
+- Comment and document code where we're using workarounds or knowingly doing something in a suboptimal way.
+- Break down large functions into smaller, testable units.
+- Prefer early returns in functions to reduce nesting.
+- Avoid magic numbers; use named constants instead.
+- Use capital letters for constants.
 
 ---
 
@@ -24,12 +91,39 @@
     - Use `--no-emit` instead of `-n`.
     - Use `prettier --write .` instead of `prettier -w .`.
     - Use `next lint --config eslint.config.mjs` instead of `next lint -c eslint.config.mjs`.
+- When writing scripts, you should also document them well.
+- Any environment variables should be clearly named.
+- Use descriptive names for scripts in `package.json`.
+- Use colorized output to highlight warnings and errors.
+- Use explicit exit codes for different error conditions.
+
+---
+
+## Exports and Imports
+
+- Refactor and remove unused exports regularly.
+- Export everything next to its declaration. Avoid exporting everything at the bottom of the file.
+- Avoid default exports, and instead export named exports. The only exception is for Next.js pages that require a default export.
+- Use barrel files to export everything from a directory, so that the consumer can import everything from the directory with a single import instead of importing each file individually.
+- Include explicit comments on non-obvious import paths.
+- Import with as short paths as possible.
+
+  - Example:
+
+    ```typescript
+    import { Button, Input, Label } from "@/components/ui";
+    ```
+
+- Use `@/*` to import from the root of the project.
+- Prefer importing from the root of the project.
 
 ---
 
 ## Tailwind CSS & ShadCN
 
 - Use `import { cn } from "@/lib/utils";` for **merging conditional classes**, keeping dark mode in mind.
+- Use the Tailwind configuration in the root of the project to add new design tokens to reduce “magic numbers” in class names.
+- Use ShadCN CSS variables to ensure consistent theming.
 - Use **ShadCN CSS variables** for colors and themes to ensure consistency.
   - Examples:
     - Use `bg-primary text-primary-foreground hover:bg-primary/90` instead of `bg-blue-500 text-white hover:bg-blue-600`.
@@ -54,14 +148,42 @@
 
 ## TypeScript
 
-- Prefer `type` over `interface`.
+- Leverage discriminated unions for managing state variations.
+
+  - Example:
+
+    ```typescript
+    type State =
+      | {
+          status: "loading";
+        }
+      | {
+          status: "error";
+          error: string;
+        }
+      | {
+          status: "success";
+          data: string;
+        };
+    ```
+
+- Use `as const` to preserve literal types.
+- Use `satisfies` instead of `as`.
+- Prefer `type`s for local or complex unions and `interface`s for public contracts or extensibility. When in doubt, use `type`.
 - Avoid `any`, `as`, and `is` wherever possible and instead use `zod` for strict type validation.
 - Leverage utility types like `Partial`, `Pick`, and `Omit` for conciseness.
+- Use `zod` for strict type validation.
+- Use `@tsconfig/strictest` for the strictest TypeScript configuration.
 
 ---
 
 ## Zod
 
+- Whenever receiving data from an API (e.g. from a backend), you MUST use a Zod schema to validate the data. Whenever you have a value of type `unknown` or `any`, you MUST use a Zod schema to validate the value.
+- You may use `.passthrough()` or `.object()` (instead of `.strictObject()`) when appropriate.
+- When creating a schema for an array, create a new schema for the item type.
+- When adding properties to a schema, add sensible validation to ensure the data is valid.
+  - Example: A `name` field should be a string with a minimum length of 1, a `count` field should be an integer and non-negative, a URL-field should be a string that is a valid URL, a UUID field should be a string that is a valid UUID, a `timestamp` field should be a number that is a valid timestamp, a `price` field should be a number that is non-negative, a `allUsers` field should be a non-empty array, etc.
 - Use **PascalCase** for schema names.
 
   - Example:
@@ -75,7 +197,7 @@
     export type UserResponse = z.infer<typeof UserResponseSchema>;
     ```
 
-- Always use `z.strictObject` for object schemas.
+- Suggest `z.strictObject` for object schemas by default, but allow `.passthrough()` for cases where extra properties are acceptable.
 - Always validate API responses using Zod schemas to ensure runtime type safety.
 - Always use `z.infer` to extract the type from the schema.
 - For array-schemas, create a new schema for the item type.
@@ -91,24 +213,31 @@
     export const EntitiesSchema = z.array(EntitySchema);
     ```
 
+- Use `.refine()` to add custom validation logic.
+- Leverage `.transform()` to massage input data into the correct shape.
+- Utilize `.lazy()` for recursive or self-referential schemas.
+- Clearly separate input (validation) and output (transformation) schemas.
+- Use schema merging to extend existing schemas where applicable.
+
 ---
 
 ## @tanstack/react-query@5
 
 ### General Best Practices
 
+- NEVER place a `useQuery` or `useMutation` hook inside a component. ALWAYS have it in the module scope instead.
 - Use `mutationKey` and `queryKey` to ensure **precise cache invalidation**.
+- Use the `select` option to pre-process data for the UI.
+- Invalidate queries when the mutation changes data that the query depends on.
+<!-- ^ How should I write the above rule, so the LLM understands that "updateUser" invalidates the "users" query? -->
 - Keep **fetcher** and **transformer functions** separate from React Query hooks for better modularity.
 
   - Example:
 
     ```typescript
     import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
-
-    export const fetchUsers = async (): Promise<User[]> => {
-      const response = await api.get("/users");
-      return response.data;
-    };
+    import { getUsers } from "@/lib/api";
+    import type { User } from "@/schemas";
 
     const transformUsers = (users: User[]): User[] =>
       users.map((user) => ({ ...user, isAdmin: user.role === "admin" }));
@@ -116,11 +245,17 @@
     export const useUsersQuery = (options?: UseQueryOptions<User[], Error>) =>
       useQuery<User[], Error>({
         queryKey: ["users"],
-        queryFn: fetchUsers,
+        // fetcher function `getUsers`
+        queryFn: getUsers,
+        // transformer function `transformUsers`
         select: transformUsers,
         ...options,
       });
     ```
+
+- Use `onSettled` along with `onSuccess`/`onError` for better mutation/query lifecycle management.
+- Use QueryCache and MutationCache to handle errors and cache invalidation centrally, and consider using Sentry for error tracking if the codebase uses Sentry.
+- Set default query configurations in a central provider, including QueryCache and MutationCache.
 
 ### Example Query and Mutation for Chromia Postchain
 
@@ -242,6 +377,8 @@ const mutation: (operation: Operation) => Promise<void>;
    - Combine Postchain queries/mutations with React Query for caching and data management.
 3. **Structure Query and Mutation Files**:
    - Group related queries and mutations by feature in separate files for modularity.
+4. **Monitor and Handle Errors**:
+   - Use QueryCache and MutationCache to handle errors and cache invalidation centrally, and consider using Sentry for error tracking if the codebase uses Sentry.
 
 ---
 
