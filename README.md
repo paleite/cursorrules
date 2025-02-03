@@ -12,52 +12,45 @@
 
 ### Modularization
 
-A good folder structure is the following. It should be taken as a suggestion and
-not a strict rule.
+A good folder structure is the following. It should be taken as a suggestion and not a strict rule.
 
-NOTE: if you don't need to
-separate something into multiple files, just use the folder-name as the
-file-name. E.g. if you don't need separate files for the user-schema and the
-product-schema, just place all schemas in `src/schemas.ts`.
+NOTE: if you don't need to separate something into multiple files, just use the folder-name as the file-name. E.g. if you don't need separate files for the user-schema and the product-schema, just place all schemas in `src/schemas.ts`.
 
-You can put feature-specific files inside the app-folder next to its page.ts
-file. E.g. if you have a form for creating a user, put the form in a file called
-`create-user-form.tsx` and the react-hook-form hook in a file called
-`use-create-user-form.ts` next to the page.ts file.
+You can put feature-specific files inside the app-folder next to its page.ts file. E.g. if you have a form for creating a user, put the form in a file called `create-user-form.tsx` and the react-hook-form hook in a file called `use-create-user-form.ts` next to the page.ts file.
 
 ```
 src/
-  app/                    // The Next.js app structure (pages, layouts, etc.)
-    users/                // Feature-specific files for the users feature
-      page.ts             // Imports the CreateUserForm
-      create-user-form.tsx // Exports the CreateUserForm component which uses `react-hook-form`'s useForm hook
+  app/                          // The Next.js app structure (pages, layouts, etc.)
+    users/                      // Feature-specific files for the users feature
+      page.ts                   // Imports the CreateUserForm
+      create-user-form.tsx      // Exports the CreateUserForm component which uses `react-hook-form`'s useForm hook
       use-create-user-modal.tsx // Exports the useCreateUserModal hook which uses `@ebay/nice-modal-react`'s useModal hook
-  components/             // React components
-    ui/                   // Reusable UI components (e.g., ShadCN components)
-    common/               // Components that are used across multiple features
-  contexts/               // React context providers
-    auth-context.ts       // React context provider for authentication
-    user-context.ts       // React context provider for user
-  lib/                    // Project-level libraries and utilities
-    api.ts                // API
-    constants.ts          // Constants
-    postchain-client.ts   // API client initialization
-    utils/                // Generic utility functions
-      format.ts           // Formatting functions
-      convert.ts          // Conversion functions
-  hooks/                  // Global React hooks
-  providers/              // React context providers
-    auth-provider.ts      // React context provider for authentication
-    user-provider.ts      // React context provider for user
-  queries/                // Centralize queries here
-    users-queries.ts      // React Query queries/mutations for users
-    posts-queries.ts      // React Query queries/mutations for posts
-  schemas/                // Zod schemas
-    user-schema.ts        // Zod schema for user
-    product-schema.ts     // Zod schema for product
-  stores/                 // Zustand or other state management stores
-    user-store.ts         // Zustand store for user
-    settings-store.ts     // Zustand store for settings
+  components/                   // React components
+    ui/                         // Reusable UI components (e.g., ShadCN components)
+    common/                     // Components that are used across multiple features
+  contexts/                     // React context providers
+    auth-context.ts             // React context provider for authentication
+    user-context.ts             // React context provider for user
+  lib/                          // Project-level libraries and utilities
+    api.ts                      // API
+    constants.ts                // Constants
+    postchain-client.ts         // API client initialization
+    utils/                      // Generic utility functions
+      format.ts                 // Formatting functions
+      convert.ts                // Conversion functions
+  hooks/                        // Global React hooks
+  providers/                    // React context providers
+    auth-provider.ts            // React context provider for authentication
+    user-provider.ts            // React context provider for user
+  queries/                      // Centralize queries here
+    users-queries.ts            // React Query queries/mutations for users
+    posts-queries.ts            // React Query queries/mutations for posts
+  schemas/                      // Zod schemas
+    user-schema.ts              // Zod schema for user
+    product-schema.ts           // Zod schema for product
+  stores/                       // Zustand or other state management stores
+    user-store.ts               // Zustand store for user
+    settings-store.ts           // Zustand store for settings
 ```
 
 ---
@@ -376,13 +369,85 @@ const mutation: (operation: Operation) => Promise<void>;
 
 ---
 
+## Form handling
+
+- Use `react-hook-form` for form handling.
+- Always use `react-hook-form` integrated with a Zod resolver.
+  - Example:
+
+```typescript
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { UserSchema } from "@/schemas";
+
+export const useUserForm = () => {
+  return useForm<z.infer<typeof UserSchema>>({
+    resolver: zodResolver(UserSchema),
+  });
+};
+```
+
+---
+
+## Utility Functions
+
+- Write pure, well-typed utility functions that handle edge cases and are well documented, especially for complex transformations.
+- Use descriptive names for utility functions and include proper error handling.
+
+---
+
+## Custom Hooks
+
+- Develop custom hooks that are focused on a single responsibility, include proper type definitions, and handle loading/error states consistently.
+- Ensure that hooks return consistent interfaces (e.g., always returning `{ data, isLoading, error }`).
+
+---
+
+## API Integration
+
+- When using axios for API requests, define a proper configuration object (including headers and base URLs), and validate responses with Zod.
+- Keep API logic separate from UI logic to avoid mixing concerns.
+
+---
+
+## Error Handling
+
+- Create and use typed error formatters, handle specific error cases, and implement error boundaries where appropriate.
+- Ensure error messages are specific and helpful rather than generic.
+
+---
+
+## Configuration Management
+
+- Use well-typed configuration objects to manage environment variables and separate configuration concerns from business logic.
+
+---
+
+## Integration with the Chromia ecosystem
+
+The following dependencies are commonly used in the Chromia ecosystem:
+
+### Chromia-specific
+
+- `@chromia/ft4` - A toolkit for dApp developers in the Chromia ecosystem, supporting account creation, access management, external signature solutions, and asset management (issuance, allocation, transfers, and tracing).
+- `postchain-client` - A high-level wrapper for interacting with the Chromia blockchain.
+
+### Ethereum & Multi-Chain
+
+- `connectkit` - A React-based wallet connector.
+- `viem` - A modern Ethereum client with a focus on performance and security.
+- `wagmi` - A React-based Ethereum interaction library. Built on top of viem, but provides React Hooks for easier integration.
+
+---
+
 ## Conclusion
 
 By following these best practices, you can maintain a clean, type-safe, and modular codebase. Combining Zod with React Query ensures runtime validation, precise caching, and enhanced maintainability, especially when working with dynamic data sources like Chromia Postchain.
 
 ---
 
-# React-query examples from another project
+## Addendum: React-query examples from a project
 
 ```typescript
 // First:
@@ -602,61 +667,3 @@ export default function Page() {
   );
 }
 ```
-
-# Form handling
-
-- Use `react-hook-form` for form handling.
-- Always use `react-hook-form` integrated with a Zod resolver.
-  - Example:
-
-```typescript
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { UserSchema } from "@/schemas";
-
-export const useUserForm = () => {
-  return useForm<z.infer<typeof UserSchema>>({
-    resolver: zodResolver(UserSchema),
-  });
-};
-```
-
-# Utility Functions
-
-- Write pure, well-typed utility functions that handle edge cases and are well documented, especially for complex transformations.
-- Use descriptive names for utility functions and include proper error handling.
-
-# Custom Hooks
-
-- Develop custom hooks that are focused on a single responsibility, include proper type definitions, and handle loading/error states consistently.
-- Ensure that hooks return consistent interfaces (e.g., always returning `{ data, isLoading, error }`).
-
-# API Integration
-
-- When using axios for API requests, define a proper configuration object (including headers and base URLs), and validate responses with Zod.
-- Keep API logic separate from UI logic to avoid mixing concerns.
-
-# Error Handling
-
-- Create and use typed error formatters, handle specific error cases, and implement error boundaries where appropriate.
-- Ensure error messages are specific and helpful rather than generic.
-
-# Configuration Management
-
-- Use well-typed configuration objects to manage environment variables and separate configuration concerns from business logic.
-
-# Integration with the Chromia ecosystem
-
-The following dependencies are commonly used in the Chromia ecosystem:
-
-## Chromia-specific
-
-- `@chromia/ft4` - A toolkit for dApp developers in the Chromia ecosystem, supporting account creation, access management, external signature solutions, and asset management (issuance, allocation, transfers, and tracing).
-- `postchain-client` - A high-level wrapper for interacting with the Chromia blockchain.
-
-## Ethereum & Multi-Chain
-
-- `connectkit` - A React-based wallet connector.
-- `viem` - A modern Ethereum client with a focus on performance and security.
-- `wagmi` - A React-based Ethereum interaction library. Built on top of viem, but provides React Hooks for easier integration.
