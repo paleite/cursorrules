@@ -1,3 +1,7 @@
+IMPORTANT: For large feature requests, ensure there's a section for it with a TODO checklist inside `progress.md`. If the feature is already outlined in the `progress.md` file, implement the next unfinished item on the list and update the `progress.md` file to reflect the progress.
+
+Whenever you finish a complete feature, you must also update the CHANGELOG.md file to reflect the changes, so make sure you provide a complete codeblock for it.
+
 # Front-End Coding Best Practices
 
 ## File Structure
@@ -437,8 +441,100 @@ The following dependencies are commonly used in the Chromia ecosystem:
 ### Ethereum & Multi-Chain
 
 - `connectkit` - A React-based wallet connector.
-- `viem` - A modern Ethereum client with a focus on performance and security.
-- `wagmi` - A React-based Ethereum interaction library. Built on top of viem, but provides React Hooks for easier integration.
+- `wagmi` - A React-based Ethereum interaction library. Built on top of `viem`. Provides React Hooks for easier integration.
+
+---
+
+## Code Examples
+
+### Environment Variables
+```typescript
+// env.ts
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
+
+export const env = createEnv({
+  client: {
+    NEXT_PUBLIC_BRID: z.string().min(1),
+    NEXT_PUBLIC_NODE_URL: z.string().url(),
+  },
+});
+```
+
+### State Management
+```typescript
+// stores/use-session-store.ts
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+interface SessionState {
+  session: Session | null;
+  setSession: (session: Session | null) => void;
+}
+
+export const useSessionStore = create<SessionState>()(
+  persist(
+    (set) => ({
+      session: null,
+      setSession: (session) => set({ session }),
+    }),
+    { name: "session" }
+  )
+);
+```
+
+### Forms with Validation
+```typescript
+// components/example-form.tsx
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+
+export function Form() {
+  const form = useForm<FormValues>({
+    resolver: zodResolver(FormSchema),
+  });
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      {/* Form fields */}
+    </form>
+  );
+}
+```
+
+### Data Fetching
+```typescript
+// queries/use-data.ts
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+export const useData = () => {
+  return useQuery({
+    queryKey: ["data"],
+    queryFn: async () => {
+      const { data } = await axios.get("/api/data");
+      return DataSchema.parse(data);
+    },
+  });
+};
+```
+
+### Web3 Integration
+```typescript
+// hooks/use-wallet.ts
+import { useAccount } from "wagmi";
+import { useChromiaAccount } from "@chromia/ft4";
+
+export const useWallet = () => {
+  const { address } = useAccount();
+  const { account } = useChromiaAccount();
+
+  return {
+    ethAddress: address,
+    chromiaAccount: account,
+  };
+};
+```
 
 ---
 
