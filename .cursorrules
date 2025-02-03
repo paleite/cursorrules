@@ -1,8 +1,36 @@
-IMPORTANT: For large feature requests, ensure there's a section for it with a TODO checklist inside `progress.md`, and if there isn't one, create an outline on how to implement it. If the feature is already outlined in the `progress.md` file, implement the next unfinished item on the list and update the `progress.md` file to reflect the progress.
-
-Whenever you finish a complete feature, you must also update the CHANGELOG.md file to reflect the changes, so make sure you provide a complete codeblock for it.
-
 # Front-End Coding Best Practices
+
+## Large Feature Implementation Guidelines
+
+### 1. **Planning Phase**
+
+- For any large feature request, first check if there’s a corresponding section in `progress.md`.
+- If no section exists, create an outline of the implementation plan, including:
+  - Feature scope and expected behavior.
+  - Key components/modules to be modified or added.
+  - Dependencies or prerequisite steps.
+  - Potential edge cases and error handling.
+
+### 2. **Implementation Phase**
+
+- If the feature already has an outline in `progress.md`, implement the next unfinished item on the checklist.
+- Keep `progress.md` up to date by marking completed tasks and refining the plan if necessary.
+
+### 3. **Review & Documentation Phase**
+
+- Once the feature is completed:
+  - Update the `CHANGELOG.md` with a detailed changelog entry.
+  - Ensure all necessary tests are added or updated.
+  - Confirm the feature meets the initial outlined goals.
+
+### 4. **Finalization & Commit**
+
+- Before finalizing:
+  - Ensure code is formatted and follows project conventions.
+  - Make sure any related documentation is updated.
+  - Provide a summary in `progress.md` stating the feature is complete.
+
+---
 
 ## File Structure
 
@@ -448,6 +476,7 @@ The following dependencies are commonly used in the Chromia ecosystem:
 ## Code Examples
 
 ### Environment Variables
+
 ```typescript
 // env.ts
 import { createEnv } from "@t3-oss/env-nextjs";
@@ -462,6 +491,7 @@ export const env = createEnv({
 ```
 
 ### State Management
+
 ```typescript
 // stores/use-session-store.ts
 import { create } from "zustand";
@@ -478,12 +508,13 @@ export const useSessionStore = create<SessionState>()(
       session: null,
       setSession: (session) => set({ session }),
     }),
-    { name: "session" }
-  )
+    { name: "session" },
+  ),
 );
 ```
 
 ### Forms with Validation
+
 ```typescript
 // components/example-form.tsx
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -503,6 +534,7 @@ export function Form() {
 ```
 
 ### Data Fetching
+
 ```typescript
 // queries/use-data.ts
 import { useQuery } from "@tanstack/react-query";
@@ -520,6 +552,7 @@ export const useData = () => {
 ```
 
 ### Web3 Integration
+
 ```typescript
 // hooks/use-wallet.ts
 import { useAccount } from "wagmi";
