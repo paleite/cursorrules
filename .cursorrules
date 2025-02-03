@@ -1,4 +1,4 @@
-IMPORTANT: For large feature requests, ensure there's a section for it with a TODO checklist inside `progress.md`. If the feature is already outlined in the `progress.md` file, implement the next unfinished item on the list and update the `progress.md` file to reflect the progress.
+IMPORTANT: For large feature requests, ensure there's a section for it with a TODO checklist inside `progress.md`, and if there isn't one, create an outline on how to implement it. If the feature is already outlined in the `progress.md` file, implement the next unfinished item on the list and update the `progress.md` file to reflect the progress.
 
 Whenever you finish a complete feature, you must also update the CHANGELOG.md file to reflect the changes, so make sure you provide a complete codeblock for it.
 
