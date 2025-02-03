@@ -421,6 +421,7 @@ export const useUserForm = () => {
 ## Configuration Management
 
 - Use well-typed configuration objects to manage environment variables and separate configuration concerns from business logic.
+- Use `@t3-oss/env-nextjs` to manage environment variables, and NEVER use `process.env` directly.
 
 ---
 
