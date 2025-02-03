@@ -8,11 +8,7 @@
 
 ### Folder structure
 
-If a filename is index.ts, it should either only contain re-exports (barrel exports), or no re-exports at all.
-
-<!-- TODO: Expand on Naming Conventions: While kebab-case is clear, consider clarifying rules for different file types (e.g. test files, configuration files). -->
-
-<!-- TODO: Modularization: Recommend a folder structure that scales well as the project grows. -->
+- If a filename is `index.ts`, it should either only contain re-exports (barrel exports), or no re-exports at all.
 
 ### Modularization
 
@@ -69,8 +65,6 @@ src/
 ## Code Readability
 
 - Write code to be more **readable than writable**.
-  - Examples:
-    - <!-- TODO: -->
 - Use **consistent naming** for all components, variables, functions, etc.
 - Use **descriptive names**.
   - Examples:
@@ -159,17 +153,9 @@ src/
 
     ```typescript
     type State =
-      | {
-          status: "loading";
-        }
-      | {
-          status: "error";
-          error: string;
-        }
-      | {
-          status: "success";
-          data: string;
-        };
+      | { status: "loading" }
+      | { status: "error"; error: string }
+      | { status: "success"; data: string };
     ```
 
 - Use `as const` to preserve literal types.
@@ -204,7 +190,7 @@ src/
 
 - Suggest `z.strictObject` for object schemas by default, but allow `.passthrough()` for cases where extra properties are acceptable.
 - Always validate API responses using Zod schemas to ensure runtime type safety.
-- Always use `z.infer` to extract the type from the schema.
+- Always use `z.infer` to extract the type from the schema and always export them.
 - For array-schemas, create a new schema for the item type.
 
   - Example:
@@ -260,8 +246,10 @@ src/
     ```
 
 - Use `onSettled` along with `onSuccess`/`onError` for better mutation/query lifecycle management.
-- Use QueryCache and MutationCache to handle errors and cache invalidation centrally, and consider using Sentry for error tracking if the codebase uses Sentry.
-- Set default query configurations in a central provider, including QueryCache and MutationCache.
+- Use `QueryCache` and `MutationCache` to handle errors and cache invalidation centrally, and consider using Sentry for error tracking if the codebase uses Sentry.
+- Set default query configurations in a central provider, including `QueryCache` and `MutationCache`.
+- Name hooks using a pattern like `useXQuery` or `useXMutation` (e.g., `useGetMemeCoinPriceQuery`).
+- Ensure the query key is identical to the “name” property of the query, with any arguments appended as needed (e.g., `queryKey: ["get_meme_coin_price", tokenId]` ).
 
 ### Example Query and Mutation for Chromia Postchain
 
@@ -613,6 +601,62 @@ export default function Page() {
     </div>
   );
 }
-
-
 ```
+
+# Form handling
+
+- Use `react-hook-form` for form handling.
+- Always use `react-hook-form` integrated with a Zod resolver.
+  - Example:
+
+```typescript
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { UserSchema } from "@/schemas";
+
+export const useUserForm = () => {
+  return useForm<z.infer<typeof UserSchema>>({
+    resolver: zodResolver(UserSchema),
+  });
+};
+```
+
+# Utility Functions
+
+- Write pure, well-typed utility functions that handle edge cases and are well documented, especially for complex transformations.
+- Use descriptive names for utility functions and include proper error handling.
+
+# Custom Hooks
+
+- Develop custom hooks that are focused on a single responsibility, include proper type definitions, and handle loading/error states consistently.
+- Ensure that hooks return consistent interfaces (e.g., always returning `{ data, isLoading, error }`).
+
+# API Integration
+
+- When using axios for API requests, define a proper configuration object (including headers and base URLs), and validate responses with Zod.
+- Keep API logic separate from UI logic to avoid mixing concerns.
+
+# Error Handling
+
+- Create and use typed error formatters, handle specific error cases, and implement error boundaries where appropriate.
+- Ensure error messages are specific and helpful rather than generic.
+
+# Configuration Management
+
+- Use well-typed configuration objects to manage environment variables and separate configuration concerns from business logic.
+
+# Integration with the Chromia ecosystem
+
+The following dependencies are commonly used in the Chromia ecosystem:
+
+## Chromia-specific
+
+- `@chromia/ft4` - A toolkit for dApp developers in the Chromia ecosystem, supporting account creation, access management, external signature solutions, and asset management (issuance, allocation, transfers, and tracing).
+- `postchain-client` - A high-level wrapper for interacting with the Chromia blockchain.
+
+## Ethereum & Multi-Chain
+
+- `connectkit` - A React-based wallet connector.
+- `viem` - A modern Ethereum client with a focus on performance and security.
+- `wagmi` - A React-based Ethereum interaction library. Built on top of viem, but provides React Hooks for easier integration.
