@@ -450,15 +450,13 @@ By following these best practices, you can maintain a clean, type-safe, and modu
 
 ## Addendum: React-query examples from a project
 
-```typescript
-// First:
+**`@/hooks/use-nodes.tsx`**:
+
+```tsx
 import { toast } from "@/hooks/use-toast";
 import { useDeactivateConfirmationModal } from "@/modals/node-deactivate-confirmation";
-import {
-  useNodeDisableMutation
-} from "@/query/mutations";
+import { useNodeDisableMutation } from "@/query/mutations";
 import type { NodeDetailsSelectNode } from "@/query/queries";
-
 
 export function useNodeDeactivate(node: NodeDetailsSelectNode) {
   const deactivateConfirmationModal = useDeactivateConfirmationModal();
@@ -466,7 +464,6 @@ export function useNodeDeactivate(node: NodeDetailsSelectNode) {
 
   return () =>
     deactivateConfirmationModal.show({
-      name: node.name,
       onConfirm: async () => {
         await disableNode({ uid: node.uid });
       },
@@ -479,191 +476,66 @@ export function useNodeDeactivate(node: NodeDetailsSelectNode) {
       },
     });
 }
+```
 
-// Then in a second file:
+**`@/components/node-row.tsx`**:
 
-import Link from "next/link";
-
-import { EditIcon, LinkIcon, TrashIcon, Unlink } from "lucide-react";
-
-import { CopyText } from "@/components/shared/copy-text";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { TableCell, TableRow } from "@/components/ui/table";
-import {
-  useNodeDeactivate,
-  useNodeDelete,
-  useNodeUpdate,
-} from "@/hooks/use-nodes";
-import { formatShortHex, toTitleCase } from "@/lib/format";
-import { cn } from "@/lib/utils";
+```tsx
+import { useNodeDeactivate, useNodeDelete, useNodeUpdate, } from "@/hooks/use-nodes";
 import type { NodeDetailsSelectNode } from "@/query/queries";
 import { useHealthCheck } from "@/query/queries";
 
-type NodeRowProps = {
-  node: NodeDetailsSelectNode;
-};
+type NodeRowProps = { node: NodeDetailsSelectNode; };
 
 export function NodeRow({ node }: NodeRowProps) {
   const handleEdit = useNodeUpdate(node);
   const handleDeactivate = useNodeDeactivate(node);
   const handleDelete = useNodeDelete(node);
-  const { data: isHealthy, isLoading } = useHealthCheck(node.url, {
-    enabled: node.state === "ACTIVE",
-  });
+  const { data: isHealthy, isLoading } = useHealthCheck(node.url, { enabled: node.state === "ACTIVE", });
 
-  return (
-    <TableRow>
-      <TableCell className="font-bold">
-        {node.name}{" "}
-        {!isLoading && !isHealthy && node.state === "ACTIVE" ? (
-          <Badge variant="warning">Down</Badge>
-        ) : (
-          ""
-        )}
-      </TableCell>
-      <TableCell>
-        <CopyText textToCopy={node.signer}>
-          {formatShortHex(node.signer)}
-        </CopyText>
-      </TableCell>
-      <TableCell>
-        <Badge variant={node.state === "ACTIVE" ? "success" : "warning"}>
-          {toTitleCase(node.state)}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <Link href={node.url} rel="noopener noreferrer" target="_blank">
-          {!isLoading && !isHealthy && node.state === "ACTIVE" ? (
-            <Unlink className="text-warning" />
-          ) : (
-            <LinkIcon className={cn(isHealthy ? "text-success" : "")} />
-          )}
-        </Link>
-      </TableCell>
-      <TableCell>{node.totalSessions}</TableCell>
-      <TableCell>{node.activeSessions}</TableCell>
-      <TableCell>
-        <div className="flex items-center justify-end gap-4">
-          {node.state === "ACTIVE" ? (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => void handleDeactivate()}
-            >
-              Deactivate
-            </Button>
-          ) : null}
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => {
-              void handleEdit();
-            }}
-          >
-            <EditIcon />
-          </Button>
-          <Button
-            size="icon"
-            variant="destructive"
-            onClick={() => void handleDelete()}
-          >
-            <TrashIcon />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
+  return (<tr><td>{node.name}{" "}{!isLoading && !isHealthy && node.state === "ACTIVE" ? "(Down)" : ""}</td><td><div>{node.state === "ACTIVE" ? (<button onClick={() => void handleDeactivate()}>Deactivate</button>) : null}<buttononClick={() => {void handleEdit();}}>Edit</button><button onClick={() => void handleDelete()}>Delete</button></div></td></tr>);
 }
+```
 
-// And then in a third file:
+**`@/app/nodes/page.tsx`**:
 
+```tsx
 "use client";
 
-import { CircleX } from "lucide-react";
-
-import { StatisticsCard } from "@/components/shared/statistics-card";
-import { StatusMessage } from "@/components/status-message";
-import { Loading } from "@/components/ui/loading";
-import {
-  Table,
-  TableBody,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { useAuthenticatedNodeDetails } from "@/query/queries";
-
-import { Empty } from "./empty";
-import { NodeRow } from "./node-row";
+import { NodeRow } from "@/components/node-row";
 
 export default function Page() {
   const { data, isError, isLoading } = useAuthenticatedNodeDetails();
 
   if (isLoading) {
-    return <Loading className="mx-auto" />;
+    return <div>Loading...</div>;
   }
 
   if (isError && !data) {
-    return (
-      <StatusMessage
-        icon={CircleX}
-        message="Error loading data"
-        variant="error"
-      />
-    );
+    return <div>Error loading data</div>;
   }
 
   if (!data || data.nodes.length === 0) {
-    return <Empty />;
+    return <div>No nodes found</div>;
   }
 
   return (
-    <div className="~space-y-8/16">
-      <div className="flex max-w-5xl flex-col ~gap-4/10 md:flex-row">
-        <StatisticsCard
-          cardColor="card-bg-1"
-          isError={isError}
-          isLoading={isLoading}
-          title="Total Owned Nodes"
-          value={data.totalNodes}
-        />
-        <StatisticsCard
-          cardColor="card-bg-2"
-          isError={isError}
-          isLoading={isLoading}
-          title="Total Sessions Served"
-          value={data.totalSessions}
-        />
-        <StatisticsCard
-          cardColor="card-bg-3"
-          isError={isError}
-          isLoading={isLoading}
-          title="Current Active Sessions"
-          value={data.totalActiveSessions}
-        />
-      </div>
-      <div className="~space-y-2/6">
-        <h2 className="text-2xl font-semibold">Created Nodes</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Public Key</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>URL</TableHead>
-              <TableHead>Served Sessions</TableHead>
-              <TableHead>Active Sessions</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.nodes.map((node, key) => (
-              <NodeRow key={key} node={node} />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+    <div>
+      <h2>Created Nodes</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.nodes.map((node, key) => (
+            <NodeRow key={key} node={node} />
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
