@@ -16,51 +16,53 @@ If a filename is index.ts, it should either only contain re-exports (barrel expo
 
 ### Modularization
 
-A good folder structure is:
+A good folder structure is the following. It should be taken as a suggestion and
+not a strict rule.
 
-<!--
-TODO: Clarify what belongs where and why.
+NOTE: if you don't need to
+separate something into multiple files, just use the folder-name as the
+file-name. E.g. if you don't need separate files for the user-schema and the
+product-schema, just place all schemas in `src/schemas.ts`.
 
-shadcn's shared components are in the components/ui/ folder.
-next.js app is in the app/ folder.
-
-where should the following code go:
-
-- custom components that are only used in one page
-- custom components that are only used together with one parent component (e.g. DialogHeader only makes sense in a Dialog component)
-- custom shared components, e.g. a site-wide footer.
-- hooks
-- react-query hooks (queries and mutations)
-- react-hook-form hooks?
-- react contexts?
-- zustand-stores
-- zod-schemas
-- api client initialization
-- api fetching
-- providers
-- functions for formatting, converting, etc.
-- constants, such as "DEFAULT_TIMEOUT" or "MAX_RETRIES"
-
-what should be in the lib/ folder?
-
-
+You can put feature-specific files inside the app-folder next to its page.ts
+file. E.g. if you have a form for creating a user, put the form in a file called
+`create-user-form.tsx` and the react-hook-form hook in a file called
+`use-create-user-form.ts` next to the page.ts file.
 
 ```
 src/
-  app/ <- nextjs app
-  components/
-    ui/ <- shadcn components
-  lib/ <- TODO: What belongs here?
-    postchain-client.ts <- postchain client
-    utils.ts <- utility functions
-  query/
-    queries.ts <- react query queries
-    mutations.ts <- react query mutations
-  schemas/ <- zod schemas
-  hooks/ <- react hooks
-  stores/ <- zustand stores
+  app/                    // The Next.js app structure (pages, layouts, etc.)
+    users/                // Feature-specific files for the users feature
+      page.ts             // Imports the CreateUserForm
+      create-user-form.tsx // Exports the CreateUserForm component which uses `react-hook-form`'s useForm hook
+      use-create-user-modal.tsx // Exports the useCreateUserModal hook which uses `@ebay/nice-modal-react`'s useModal hook
+  components/             // React components
+    ui/                   // Reusable UI components (e.g., ShadCN components)
+    common/               // Components that are used across multiple features
+  contexts/               // React context providers
+    auth-context.ts       // React context provider for authentication
+    user-context.ts       // React context provider for user
+  lib/                    // Project-level libraries and utilities
+    api.ts                // API
+    constants.ts          // Constants
+    postchain-client.ts   // API client initialization
+    utils/                // Generic utility functions
+      format.ts           // Formatting functions
+      convert.ts          // Conversion functions
+  hooks/                  // Global React hooks
+  providers/              // React context providers
+    auth-provider.ts      // React context provider for authentication
+    user-provider.ts      // React context provider for user
+  queries/                // Centralize queries here
+    users-queries.ts      // React Query queries/mutations for users
+    posts-queries.ts      // React Query queries/mutations for posts
+  schemas/                // Zod schemas
+    user-schema.ts        // Zod schema for user
+    product-schema.ts     // Zod schema for product
+  stores/                 // Zustand or other state management stores
+    user-store.ts         // Zustand store for user
+    settings-store.ts     // Zustand store for settings
 ```
--->
 
 ---
 
@@ -70,6 +72,10 @@ src/
   - Examples:
     - <!-- TODO: -->
 - Use **consistent naming** for all components, variables, functions, etc.
+- Use **descriptive names**.
+  - Examples:
+    - Instead of naming a function `doStuff()`, use `fetchUserData()` if it retrieves user information.
+    - For boolean flags, prefer `isUserAuthenticated()` over vague names like `authFlag`.
 - When an identifier's name doesn't describe its purpose, or its purpose has changed, rename it.
 - When generating code (but not when editing existing code), always prefer **explicit and clear syntax** over shorthand
   - Examples:
@@ -123,7 +129,6 @@ src/
 
 - Use `import { cn } from "@/lib/utils";` for **merging conditional classes**, keeping dark mode in mind.
 - Use the Tailwind configuration in the root of the project to add new design tokens to reduce “magic numbers” in class names.
-- Use ShadCN CSS variables to ensure consistent theming.
 - Use **ShadCN CSS variables** for colors and themes to ensure consistency.
   - Examples:
     - Use `bg-primary text-primary-foreground hover:bg-primary/90` instead of `bg-blue-500 text-white hover:bg-blue-600`.
@@ -168,7 +173,7 @@ src/
     ```
 
 - Use `as const` to preserve literal types.
-- Use `satisfies` instead of `as`.
+- Use `satisfies` instead of `as`, because it ensures type compatibility while preserving the literal type.
 - Prefer `type`s for local or complex unions and `interface`s for public contracts or extensibility. When in doubt, use `type`.
 - Avoid `any`, `as`, and `is` wherever possible and instead use `zod` for strict type validation.
 - Leverage utility types like `Partial`, `Pick`, and `Omit` for conciseness.
@@ -229,7 +234,8 @@ src/
 - Use `mutationKey` and `queryKey` to ensure **precise cache invalidation**.
 - Use the `select` option to pre-process data for the UI.
 - Invalidate queries when the mutation changes data that the query depends on.
-<!-- ^ How should I write the above rule, so the LLM understands that "updateUser" invalidates the "users" query? -->
+  - Example:
+    - After any mutation (e.g., `updateUser`) that alters data fetched by a query (e.g., `users`), ensure you call `queryClient.invalidateQueries(['users'])` to refresh the data and keep the UI in sync with the latest state.
 - Keep **fetcher** and **transformer functions** separate from React Query hooks for better modularity.
 
   - Example:
