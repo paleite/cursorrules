@@ -342,6 +342,66 @@ Example `tsconfig.json` for a Next.js project:
 
 - Use `onSettled` along with `onSuccess`/`onError` for better mutation/query lifecycle management.
 - Use `QueryCache` and `MutationCache` to handle errors and cache invalidation centrally, and consider using Sentry for error tracking if the codebase uses Sentry.
+
+  - Example:
+
+    ```typescript
+    const queryCache = new QueryCache({
+      onError: (error: Error, query: Query<unknown, unknown>) => {
+        const queryKey =
+          typeof query.queryKey[0] === "string" ? query.queryKey[0] : "unknown";
+        console.error(`[query error for queryKey ${queryKey}]`, error, query);
+
+        if (error instanceof ZodError) {
+          const formattedErrors = formatZodError(error);
+
+          toast({
+            title: "Validation Error",
+            description: formattedErrors.map((err) => err.message).join("\n"),
+            variant: "destructive",
+          });
+
+          return;
+        }
+
+        toast({
+          title: "Error",
+          description:
+            error instanceof Error
+              ? error.message
+              : "An unexpected error occurred",
+          variant: "destructive",
+        });
+      },
+    });
+
+    const mutationCache = new MutationCache({
+      onError: (error, _variables, _context, mutation) => {
+        const mutationKey =
+          typeof mutation.options.mutationKey?.[0] === "string"
+            ? mutation.options.mutationKey[0]
+            : "unknown";
+        console.error(
+          `[mutation error for mutationKey ${mutationKey}]`,
+          error,
+          mutation,
+        );
+      },
+    });
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          // With SSR, we usually want to set some default staleTime
+          // above 0 to avoid refetching immediately on the client
+          staleTime: 60 * 1000,
+        },
+      },
+      mutationCache,
+      queryCache,
+    });
+    ```
+
 - Set default query configurations in a central provider, including `QueryCache` and `MutationCache`.
 - Name hooks using a pattern like `useXQuery` or `useXMutation` (e.g., `useGetMemeCoinPriceQuery`).
 - Ensure the query key is identical to the “name” property of the query, with any arguments appended as needed (e.g., `queryKey: ["get_meme_coin_price", tokenId]` ).
