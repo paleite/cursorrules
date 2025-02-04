@@ -113,7 +113,7 @@ src/
 
 You can enforce these rules when editing existing code as well as when writing new code.
 
-- Use nullish coalescing (??) instead of logical OR (||) for default values
+- Use nullish coalescing (`??`) instead of logical OR (`||`) for default values
 - Prefer immutable programming and pure functions
 - Use appropriate error types (TypeError, RangeError)
 - Add default case type checking in switch statements
@@ -132,6 +132,65 @@ You can enforce these rules when editing existing code as well as when writing n
 - Use descriptive names for scripts in `package.json`.
 - Use colorized output to highlight warnings and errors.
 - Use explicit exit codes for different error conditions.
+
+---
+
+## Node.js setup
+
+- Ensure `.nvmrc` exists and matches the version of Node.js you are using in the codebase.
+- Ensure `package.json` has a `packageManager` field that matches the codebase's package manager and an `engines` field that matches the codebase's Node.js version.
+- Ensure `@types/node` is installed and uses the same version of Node.js as `.nvmrc`.
+
+---
+
+## `package.json` scripts
+
+Ensure `package.json` has scripts for the following:
+
+- `build`: Builds the project.
+- `dev`: Runs the development server.
+- `format`: Formats the code.
+- `lint`: Runs the linter.
+- `prepare`: Prepares the project.
+- `spellcheck`: Checks the spelling.
+- `start`: Starts the production server.
+- `typecheck`: Runs the TypeScript type checker.
+
+Append each of the following scripts to package.json unless they already exist:
+
+```json
+{
+  "scripts": {
+    "lint": "eslint --cache",
+    "format": "prettier --write .",
+    "prepare": "husky",
+    "spellcheck": "cspell --config=cspell.json \"**/*.{cjs,js,md,mjs,ts,tsx}\" --no-progress --show-context --show-suggestions",
+    "typecheck": "tsc --noEmit"
+  }
+}
+```
+
+---
+
+## `tsconfig.json`
+
+- Use `@tsconfig/strictest` for the strictest TypeScript configuration.
+- Use `@tsconfig/nodeXX` and replace `XX` with the Node.js version you are using.
+- Use `@tsconfig/next` if you are using Next.js.
+
+Example `tsconfig.json` for a Next.js project:
+
+```json
+{
+  "extends": [
+    "@tsconfig/strictest/tsconfig.json",
+    "@tsconfig/next/tsconfig.json"
+  ],
+  "compilerOptions": { "baseUrl": ".", "paths": { "@/*": ["./*"] } },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+```
 
 ---
 
