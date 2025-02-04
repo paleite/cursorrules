@@ -4,12 +4,19 @@
 
 ### 1. **Planning Phase**
 
-- For any large feature request, first check if there’s a corresponding section in `progress.md`.
-- If no section exists, create an outline of the implementation plan, including:
+- For any large feature request, first check if there's a corresponding section in `progress.md`.
+- If no section exists, create an outline with a checklist (`[ ]`) of the implementation plan, including:
   - Feature scope and expected behavior.
   - Key components/modules to be modified or added.
+  - Filenames to be modified/created and what they are expected to contain.
   - Dependencies or prerequisite steps.
   - Potential edge cases and error handling.
+  - Ensuring adherence to the project's coding standards and best practices, including `.cursorrules`.
+    - Did it follow the Zod-recommendations, or did it simply ignore validating the API-response?
+    - Did it follow the react-query-recommendations, or did it use useEffect and fetch?
+    - Did it follow the tailwind-css-recommendations, or did it use inline styles?
+    - Did it follow the syntax and programming style recommendations, or did it mutate data and use for-loops instead of map?
+    - Did it follow the file structure recommendations, or did it place files in the wrong folder/file?
 
 ### 2. **Implementation Phase**
 
@@ -217,7 +224,9 @@ Example `tsconfig.json` for a Next.js project:
 ## Tailwind CSS & ShadCN
 
 - Use `import { cn } from "@/lib/utils";` for **merging conditional classes**, keeping dark mode in mind.
-- Use the Tailwind configuration in the root of the project to add new design tokens to reduce “magic numbers” in class names.
+- NEVER concatenate strings to create class names.
+- ALWAYS avoid using inline styles.
+- Use the Tailwind configuration in the root of the project to add new design tokens to reduce "magic numbers" in class names.
 - Use **ShadCN CSS variables** for colors and themes to ensure consistency.
   - Examples:
     - Use `bg-primary text-primary-foreground hover:bg-primary/90` instead of `bg-blue-500 text-white hover:bg-blue-600`.
@@ -404,7 +413,7 @@ Example `tsconfig.json` for a Next.js project:
 
 - Set default query configurations in a central provider, including `QueryCache` and `MutationCache`.
 - Name hooks using a pattern like `useXQuery` or `useXMutation` (e.g., `useGetMemeCoinPriceQuery`).
-- Ensure the query key is identical to the “name” property of the query, with any arguments appended as needed (e.g., `queryKey: ["get_meme_coin_price", tokenId]` ).
+- Ensure the query key is identical to the "name" property of the query, with any arguments appended as needed (e.g., `queryKey: ["get_meme_coin_price", tokenId]` ).
 
 ### Example Query and Mutation for Chromia Postchain
 
@@ -559,7 +568,16 @@ export const useUserForm = () => {
 
 ---
 
-## Custom Hooks
+## React Hooks
+
+- When using async functions in React, NEVER use `useEffect` and `useCallback`, and instead use `useQuery` or `useMutation` from react-query.
+
+## React
+
+- When creating props for a component, create a `type` for the props called `[ComponentName]Props`.
+- When a component has children, don't include the children in the props, and instead use PropsWithChildren.
+
+### Custom Hooks
 
 - Develop custom hooks that are focused on a single responsibility, include proper type definitions, and handle loading/error states consistently.
 - Ensure that hooks return consistent interfaces (e.g., always returning `{ data, isLoading, error }`).
@@ -568,8 +586,12 @@ export const useUserForm = () => {
 
 ## API Integration
 
-- When using axios for API requests, define a proper configuration object (including headers and base URLs), and validate responses with Zod.
+- When using `axios` for API requests, define a proper configuration object (including headers and base URLs), and validate responses with Zod.
+- ALWAYS use `zod` to validate API responses.
 - Keep API logic separate from UI logic to avoid mixing concerns.
+- Create react-query hooks for API requests.
+- Avoid using `fetch` for API requests, use `axios` instead.
+- Avoid fetching in components, create react-query hooks instead.
 
 ---
 
