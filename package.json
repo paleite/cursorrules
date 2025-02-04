@@ -1,0 +1,17 @@
+{
+  "name": "cursorrules",
+  "type": "module",
+  "module": "src/index.ts",
+  "dependencies": {
+    "@tanstack/react-query": "^5.66.0",
+    "axios": "^1.7.9",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tanstack/react-query-devtools": "^5.66.0",
+    "@tsconfig/next": "^2.0.3",
+    "@tsconfig/strictest": "^2.0.5",
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}

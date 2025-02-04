@@ -109,6 +109,17 @@ src/
 
 ---
 
+## Syntax & Programming Style
+
+You can enforce these rules when editing existing code as well as when writing new code.
+
+- Use nullish coalescing (??) instead of logical OR (||) for default values
+- Prefer immutable programming and pure functions
+- Use appropriate error types (TypeError, RangeError)
+- Add default case type checking in switch statements
+
+---
+
 ## Command Line
 
 - When generating code (but not when editing existing code), use **long flags** instead of short flags for better clarity.
