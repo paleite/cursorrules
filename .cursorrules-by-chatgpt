@@ -1,0 +1,364 @@
+# Front-End Coding Best Practices
+
+## Before you start
+
+- **Figure out which rules apply to the feature you’re implementing.**
+  For example, if the feature requires data fetching, highlight the rule about using react-query (and not `useEffect` or `fetch`). If it needs form handling, refer to react-hook-form and Zod integration.
+- **Repeat the relevant rules in your response.**
+  This ensures transparency; the user will see which `.cursorrules` items you’re following (and how).
+
+- **Focus on the Most Important Mandates**
+  - **USE**:
+    - **react-query** for async data fetching and caching (instead of `useEffect` + `fetch`).
+    - **Zod** to validate all API responses and form inputs.
+    - **Tailwind CSS + ShadCN/UI + `cn()`** for styling and class composition.
+    - **react-hook-form** for all form handling.
+    - **Zustand** for non-context or persistent client-side state.
+    - **@ebay/nice-modal-react** for modals.
+  - **AVOID**:
+    - `useEffect` for data fetching.
+    - `fetch()` directly; use a dedicated hook or API client instead.
+    - Inline styles; rely on Tailwind classes or `class-variance-authority`.
+    - Mutating data and `for`-loops; favor immutability and array methods (`map`, `filter`, etc.).
+
+---
+
+## Large Feature Implementation Guidelines
+
+### 1. **Planning Phase**
+
+- Check `progress.md` for a corresponding feature section.
+- If none exists, create an outline (using `[ ]` checklist format) covering:
+  - Feature scope & expected behavior.
+  - Key components/modules to add or modify.
+  - Filenames to create or change (and what they should contain).
+  - Dependencies or prerequisite steps.
+  - Potential edge cases & error handling.
+  - Adherence to `.cursorrules` (Zod validations, react-query, tailwind, syntax & style, file structure, etc.).
+
+### 2. **Implementation Phase**
+
+- If a plan already exists in `progress.md`, tackle the next unchecked item.
+- Keep `progress.md` updated by marking tasks done and refining the plan if needed.
+
+### 3. **Review & Documentation Phase**
+
+- After finishing the feature:
+  - Update `CHANGELOG.md` with a descriptive entry.
+  - Add or update tests as needed.
+  - Confirm the feature meets the outlined goals.
+
+### 4. **Finalization & Commit**
+
+- Before finalizing:
+  - Ensure the code adheres to project conventions and is properly formatted.
+  - Update any related documentation.
+  - Post a summary in `progress.md` stating that the feature is complete.
+
+---
+
+## File Structure
+
+- **kebab-case** for filenames.
+- **`.tsx`** for TypeScript with JSX; **`.ts`** otherwise.
+- Test files: `[filename].test.ts` or `[filename].test.tsx`.
+
+### Folder Structure
+
+- If `index.ts` exists, use it **only** for barrel exports or leave it empty.
+- The following example is suggested (not mandatory) for modularization:
+
+```
+src/
+  app/  // The Next.js app structure (pages, layouts, etc.)
+    users/  // Feature-specific files for the "users" feature
+      page.ts // Imports the CreateUserForm
+      create-user-form.tsx  // Exports a component using react-hook-form
+      use-create-user-modal.tsx // Exports a hook from @ebay/nice-modal-react
+  components/ // React components
+    ui/ // Reusable UI components (e.g., ShadCN components)
+    common/ // Reusable across multiple features
+  contexts/ // React context providers
+    auth-context.ts
+    user-context.ts
+  lib/  // Project-level libraries/utilities
+    api.ts
+    constants.ts
+    postchain-client.ts
+    utils/  // Generic utility functions
+      format.ts
+      convert.ts
+  hooks/  // Global React hooks
+  providers/  // React context providers
+    auth-provider.ts
+    user-provider.ts
+  queries/  // React Query queries/mutations
+    users-queries.ts
+    posts-queries.ts
+  schemas/  // Zod schemas
+    user-schema.ts
+    product-schema.ts
+  stores/ // Zustand or other state management
+    user-store.ts
+    settings-store.ts
+```
+
+---
+
+## Code Readability
+
+- Prioritize **readability** over conciseness.
+- Maintain **consistent naming**.
+- Use **descriptive names** for functions, variables, and booleans (e.g., `isUserAuthenticated()`).
+- Rename identifiers if their purpose changes.
+- **When generating new code**:
+  - Prefer **explicit** syntax over shorthand.
+  - Example: `React.FunctionComponent` instead of `React.FC`, `disabled={true}` instead of just `disabled`.
+- Comment and document any workarounds or suboptimal solutions.
+- Break large functions into smaller, testable ones.
+- Prefer early returns to reduce nesting.
+- Avoid magic numbers; use named constants.
+- Use capital letters for constants.
+
+---
+
+## Syntax & Programming Style
+
+- Use nullish coalescing (`??`) over logical OR (`||`) for default values.
+- Prefer immutable programming and pure functions.
+- Use appropriate error types (`TypeError`, `RangeError`, etc.).
+- Add default case type checking in `switch` statements.
+
+---
+
+## Command Line
+
+- **When generating code** (not editing existing), use **long flags**:
+  - `--no-emit` instead of `-n`.
+  - `prettier --write .` instead of `prettier -w .`.
+  - `next lint --config eslint.config.mjs` instead of `next lint -c eslint.config.mjs`.
+- Document shell scripts thoroughly.
+- Name environment variables clearly.
+- Use descriptive names for scripts in `package.json`.
+- Use colorized output for warnings/errors.
+- Use explicit exit codes for error conditions.
+
+---
+
+## Node.js setup
+
+- Ensure `.nvmrc` matches the Node.js version in use.
+- In `package.json`, ensure `packageManager` matches the codebase’s package manager, and `engines.node` matches `.nvmrc`.
+- Ensure `@types/node` is installed and matches the same Node.js version.
+
+---
+
+## `package.json` Scripts
+
+Include (or ensure you have) scripts for:
+
+- `build`
+- `dev`
+- `format`
+- `lint`
+- `prepare`
+- `spellcheck`
+- `start`
+- `typecheck`
+
+Append the following if missing:
+
+```json
+{
+  "scripts": {
+    "lint": "eslint --cache",
+    "format": "prettier --write .",
+    "prepare": "husky",
+    "spellcheck": "cspell --config=cspell.json \"**/*.{cjs,js,md,mjs,ts,tsx}\" --no-progress --show-context --show-suggestions",
+    "typecheck": "tsc --noEmit"
+  }
+}
+```
+
+---
+
+## `tsconfig.json`
+
+- Use `@tsconfig/strictest`.
+- Also use `@tsconfig/nodeXX` (replace XX with your Node version).
+- Use `@tsconfig/next` if you’re on Next.js.
+
+**Example** (Next.js):
+
+```json
+{
+  "extends": [
+    "@tsconfig/strictest/tsconfig.json",
+    "@tsconfig/next/tsconfig.json"
+  ],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@/*": ["./*"] }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+```
+
+---
+
+## Exports and Imports
+
+- Remove unused exports regularly.
+- Export next to declarations; avoid placing all exports at file bottom.
+- Avoid default exports (except in Next.js pages).
+- Use barrel files for directory-level exports, if desired.
+- Import with short paths (e.g., `@/components/ui`) and prefer `@/*` from the project root.
+- Keep import paths as concise as possible.
+
+---
+
+## Tailwind CSS & ShadCN
+
+- Use `import { cn } from "@/lib/utils";` to merge conditional classes.
+- **Never** build class names with string concatenation.
+- **Avoid inline styles**; rely on Tailwind or `class-variance-authority`.
+- Extend Tailwind config for design tokens and to avoid “magic numbers.”
+- Use **ShadCN** CSS variables for consistent theming (e.g., `bg-primary text-primary-foreground`).
+- Use `cva` from `class-variance-authority` to handle component styling variations.
+
+---
+
+## TypeScript
+
+- Leverage **discriminated unions** for state variations.
+- Use `as const` to preserve literal types.
+- Prefer `satisfies` over `as` for safer type compatibility.
+- Default to `type` for local/complex unions, and `interface` for public or extendable contracts.
+- Avoid `any`, `as`, and `is`; use `zod` for strict type checks.
+- Employ utility types (`Partial`, `Pick`, `Omit`, etc.).
+- Use the strictest TS config available.
+
+---
+
+## Zod
+
+- **Always** validate incoming data with Zod (API, `unknown`, `any`, etc.).
+- Use `.passthrough()` or `.object()` if extra props are acceptable.
+- For array schemas, define a separate item schema.
+- Provide sensible validation (e.g., non-empty strings, correct numeric ranges).
+- Use **camelCase** for schema names:
+  ```ts
+  export const userResponseSchema = z.strictObject({ ... });
+  export type UserResponse = z.infer<typeof userResponseSchema>;
+  ```
+- Recommend `z.strictObject`, but allow `.passthrough()` if needed.
+- Use `z.infer` and **export** those types.
+- For advanced validation, use `.refine()`, `.transform()`, `.lazy()`, and schema merging.
+
+---
+
+## @tanstack/react-query@5
+
+### General Best Practices
+
+- **NEVER** place `useQuery` or `useMutation` inside a component. Keep them in module scope.
+- Use `queryKey`/`mutationKey` for precise cache invalidation.
+- Use `select` to transform data for the UI.
+- Invalidate queries when mutations affect cached data.
+- Keep fetchers and transformers separate from query hooks:
+  ```ts
+  export const useUsersQuery = () =>
+    useQuery({
+      queryKey: ["users"],
+      queryFn: getUsers,
+      select: transformUsers,
+    });
+  ```
+- Use `onSettled`, `onSuccess`, `onError` for mutation/query lifecycle.
+- Configure `QueryCache`/`MutationCache` centrally. (Use Sentry if needed.)
+- Give hooks descriptive names like `useGetMemeCoinPriceQuery`.
+- Match `queryKey` to your named operation plus arguments (e.g., `["get_meme_coin_price", tokenId]`).
+
+---
+
+## Chromia Postchain
+
+1. **Use Zod** for validating all responses.
+2. **Leverage react-query** for caching and data management.
+3. **Group** queries/mutations by feature.
+4. **Handle errors** with a centralized `QueryCache` and consider logging to Sentry.
+
+---
+
+## Form Handling
+
+- Always use **react-hook-form**.
+- Integrate Zod resolvers for runtime validation:
+
+  ```ts
+  import { useForm } from "react-hook-form";
+  import { zodResolver } from "@hookform/resolvers/zod";
+
+  export const useUserForm = () => {
+    return useForm<z.infer<typeof userSchema>>({
+      resolver: zodResolver(userSchema),
+    });
+  };
+  ```
+
+---
+
+## Utility Functions
+
+- Keep them pure, well-typed, and documented.
+- Use descriptive names and proper error handling.
+
+---
+
+## React Hooks
+
+- For async, **avoid** `useEffect` or `useCallback`; prefer react-query’s `useQuery`/`useMutation`.
+
+## React
+
+- For props, define a `[ComponentName]Props` type.
+- Don’t inline `children` in the props type; use `PropsWithChildren`.
+- **Custom Hooks** should do one job well, with consistent return signatures.
+
+---
+
+## API Integration
+
+- Prefer `axios` with a config object (headers, base URL).
+- **Always** validate responses with Zod.
+- Separate API logic from UI.
+- Avoid `fetch`; wrap logic in react-query hooks.
+
+---
+
+## Error Handling
+
+- Use typed error formatters.
+- Provide specific, helpful messages.
+- Employ error boundaries when appropriate.
+
+---
+
+## Configuration Management
+
+- Use typed configs for environment variables (`@t3-oss/env-nextjs`).
+- Never call `process.env` directly.
+
+---
+
+## Integration with the Chromia Ecosystem
+
+- Common libraries: `@chromia/ft4`, `postchain-client`.
+- For Ethereum/multi-chain: `connectkit`, `wagmi` (built on `viem`).
+
+---
+
+## Conclusion
+
+Adhering to these `.cursorrules` ensures a **consistent**, **type-safe**, and **maintainable** codebase. Whenever you generate or edit code, reference relevant rules, repeat them in your output, and verify you haven’t introduced any disallowed patterns (like inline styles, unvalidated API calls, or direct `useEffect` fetching). By combining **Zod** and **react-query**—and maintaining cohesive folder structure, naming conventions, and script usage—you can keep your project organized, robust, and aligned with best practices.
