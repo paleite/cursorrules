@@ -3,18 +3,19 @@
 ## Before you start
 
 - Figure out which of the below rules apply to the context of the feature you're implementing, and repeat the rules in your response, so the user knows which rules you're following.
-- The most important rules are:
-  USE:
-    - react-query for async calls
-    - zod in API-responses and input-validation
-    - tailwindcss + shadcn/ui + cn()
-    - react-hook-form
-    - zustand for non-context state and persistent state
-    - @ebay/nice-modal-react for modals
-  AVOID:
-    - `useEffect` and `fetch()`
-    - inline styles
-    - mutating data and using for-loops
+- Focus on the Most Important Mandates
+  - USE:
+    - react-query (instead of manual `useEffect` + `fetch`) for async data fetching and caching.
+    - Zod to validate all API responses and form inputs.
+    - Tailwind CSS + ShadCN/UI + `cn()` for styling and class name composition.
+    - react-hook-form for all form handling.
+    - Zustand for non-context or persistent client-side state.
+    - @ebay/nice-modal-react for modals.
+  - AVOID:
+    - `useEffect` for data fetching.
+    - `fetch()` directly; use a dedicated hook or API client.
+    - Inline styles; rely on Tailwind classes or `class-variance-authority`.
+    - Mutating data and `for`-loops; prefer immutability and array methods like `map`, `filter`, etc.
 
 ## Large Feature Implementation Guidelines
 
