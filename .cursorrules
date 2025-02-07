@@ -279,17 +279,17 @@ Example `tsconfig.json` for a Next.js project:
 - When creating a schema for an array, create a new schema for the item type.
 - When adding properties to a schema, add sensible validation to ensure the data is valid.
   - Example: A `name` field should be a string with a minimum length of 1, a `count` field should be an integer and non-negative, a URL-field should be a string that is a valid URL, a UUID field should be a string that is a valid UUID, a `timestamp` field should be a number that is a valid timestamp, a `price` field should be a number that is non-negative, a `allUsers` field should be a non-empty array, etc.
-- Use **PascalCase** for schema names.
+- Use **camelCase** for schema names.
 
   - Example:
 
     ```typescript
-    export const UserResponseSchema = z.strictObject({
+    export const userResponseSchema = z.strictObject({
       id: z.string(),
       name: z.string(),
     });
 
-    export type UserResponse = z.infer<typeof UserResponseSchema>;
+    export type UserResponse = z.infer<typeof userResponseSchema>;
     ```
 
 - Suggest `z.strictObject` for object schemas by default, but allow `.passthrough()` for cases where extra properties are acceptable.
@@ -300,12 +300,12 @@ Example `tsconfig.json` for a Next.js project:
   - Example:
 
     ```typescript
-    export const EntitySchema = z.strictObject({
+    export const entitySchema = z.strictObject({
       id: z.string(),
       name: z.string(),
     });
 
-    export const EntitiesSchema = z.array(EntitySchema);
+    export const entitiesSchema = z.array(entitySchema);
     ```
 
 - Use `.refine()` to add custom validation logic.
@@ -432,20 +432,20 @@ import { z } from "zod";
 import { query } from "@/lib/postchain-client";
 
 // Zod schema for validation
-export const PriceItemSchema = z.strictObject({
+export const priceItemSchema = z.strictObject({
   asset: z.string().min(1),
   price: z.string().regex(/^\d+(\.\d+)?$/),
   timestamp_nano: z.number(),
 });
 
-export const LatestPricesResponseSchema = z.array(PriceItemSchema);
+export const latestPricesResponseSchema = z.array(priceItemSchema);
 
-export type PriceItem = z.infer<typeof PriceItemSchema>;
-export type LatestPricesResponse = z.infer<typeof LatestPricesResponseSchema>;
+export type PriceItem = z.infer<typeof priceItemSchema>;
+export type LatestPricesResponse = z.infer<typeof latestPricesResponseSchema>;
 
 export const fetchLatestPrices = async (): Promise<LatestPricesResponse> => {
   const response = await query({ name: "get_latest_prices" });
-  return LatestPricesResponseSchema.parse(response);
+  return latestPricesResponseSchema.parse(response);
 };
 
 export const processLatestPricesResponse = (data: PriceItem[]) => {
@@ -550,11 +550,11 @@ const mutation: (operation: Operation) => Promise<void>;
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { UserSchema } from "@/schemas";
+import { userSchema } from "@/schemas";
 
 export const useUserForm = () => {
-  return useForm<z.infer<typeof UserSchema>>({
-    resolver: zodResolver(UserSchema),
+  return useForm<z.infer<typeof userSchema>>({
+    resolver: zodResolver(userSchema),
   });
 };
 ```
@@ -674,7 +674,7 @@ import { useForm } from "react-hook-form";
 
 export function Form() {
   const form = useForm<FormValues>({
-    resolver: zodResolver(FormSchema),
+    resolver: zodResolver(formSchema),
   });
 
   return (
@@ -697,7 +697,7 @@ export const useData = () => {
     queryKey: ["data"],
     queryFn: async () => {
       const { data } = await axios.get("/api/data");
-      return DataSchema.parse(data);
+      return dataSchema.parse(data);
     },
   });
 };
