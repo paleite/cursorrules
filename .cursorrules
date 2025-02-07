@@ -1,5 +1,21 @@
 # Front-End Coding Best Practices
 
+## Before you start
+
+- Figure out which of the below rules apply to the context of the feature you're implementing, and repeat the rules in your response, so the user knows which rules you're following.
+- The most important rules are:
+  USE:
+    - react-query for async calls
+    - zod in API-responses and input-validation
+    - tailwindcss + shadcn/ui + cn()
+    - react-hook-form
+    - zustand for non-context state and persistent state
+    - @ebay/nice-modal-react for modals
+  AVOID:
+    - `useEffect` and `fetch()`
+    - inline styles
+    - mutating data and using for-loops
+
 ## Large Feature Implementation Guidelines
 
 ### 1. **Planning Phase**
