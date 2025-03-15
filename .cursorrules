@@ -1,186 +1,248 @@
-# Front-End Coding Best Practices
+# .cursorrules
+
+Below is a merged version of your existing `.cursorrules` with additional guidance on **chunking large tasks**, **maintaining context**, and **iterating** in **Cursor’s Composer**. This combined set of rules is designed to work on **existing** and **new** codebases, with an emphasis on Next.js, React (TypeScript), Tailwind CSS + ShadCN, Zod, and react-query.
+
+---
 
 ## Before you start
 
-- Figure out which of the below rules apply to the context of the feature you're implementing, and repeat the rules in your response, so the user knows which rules you're following.
-- Focus on the Most Important Mandates
-  - USE:
-    - react-query (instead of manual `useEffect` + `fetch`) for async data fetching and caching.
-    - Zod to validate all API responses and form inputs.
-    - Tailwind CSS + ShadCN/UI + `cn()` for styling and class name composition.
-    - react-hook-form for all form handling.
-    - Zustand for non-context or persistent client-side state.
-    - @ebay/nice-modal-react for modals.
-  - AVOID:
-    - `useEffect` for data fetching.
-    - `fetch()` directly; use a dedicated hook or API client.
-    - Inline styles; rely on Tailwind classes or `class-variance-authority`.
-    - Mutating data and `for`-loops; prefer immutability and array methods like `map`, `filter`, etc.
+- **Figure out which rules apply to the feature you’re implementing.**
+  For example, if the feature involves data fetching, highlight rules about using `react-query` (and not `useEffect` or `fetch`). If it needs forms, refer to **react-hook-form** and **Zod**.
+
+- **Repeat the relevant rules in your response.**
+  This ensures transparency; the user will see which `.cursorrules` items you’re following (and how).
+
+---
+
+## Focus on the Most Important Mandates
+
+**USE**:
+
+- **react-query** for async data fetching and caching (instead of `useEffect` + `fetch`).
+- **Zod** to validate **all** API responses and form inputs.
+- **Tailwind CSS + ShadCN/UI + `cn()`** for styling and class composition.
+- **react-hook-form** for all form handling.
+- **Zustand** for non-context or persistent client-side state.
+- **@ebay/nice-modal-react** for modals.
+
+**AVOID**:
+
+- `useEffect` for data fetching.
+- `fetch()` directly; use a dedicated hook or API client instead.
+- Inline styles; rely on Tailwind classes or `class-variance-authority`.
+- Mutating data and `for`-loops; favor immutability and array methods (`map`, `filter`, etc.).
+
+---
 
 ## Large Feature Implementation Guidelines
 
-### 1. **Planning Phase**
+These guidelines detail how to plan, implement, and finalize features while **chunking** tasks for **Cursor’s Composer**. The goal is to avoid exceeding the LLM context window and to handle **big** features incrementally.
 
-- For any large feature request, first check if there's a corresponding section in `progress.md`.
-- If no section exists, create an outline with a checklist (`[ ]`) of the implementation plan, including:
-  - Feature scope and expected behavior.
-  - Key components/modules to be modified or added.
-  - Filenames to be modified/created and what they are expected to contain.
-  - Dependencies or prerequisite steps.
-  - Potential edge cases and error handling.
-  - Ensuring adherence to the project's coding standards and best practices, including `.cursorrules`.
-    - Did it follow the Zod-recommendations, or did it simply ignore validating the API-response?
-    - Did it follow the react-query-recommendations, or did it use useEffect and fetch?
-    - Did it follow the tailwind-css-recommendations, or did it use inline styles?
-    - Did it follow the syntax and programming style recommendations, or did it mutate data and use for-loops instead of map?
-    - Did it follow the file structure recommendations, or did it place files in the wrong folder/file?
+### 1. Planning Phase
 
-### 2. **Implementation Phase**
+1. **Check `progress.md`** for a corresponding feature section.
 
-- If the feature already has an outline in `progress.md`, implement the next unfinished item on the checklist.
-- Keep `progress.md` up to date by marking completed tasks and refining the plan if necessary.
+   - If none exists, create an outline in `[ ]` checklist format covering:
+     - Feature scope & expected behavior.
+     - Key components/modules to add or modify.
+     - Filenames to create or change (and what they should contain).
+     - Dependencies or prerequisite steps.
+     - Potential edge cases & error handling.
+     - Adherence to `.cursorrules` (Zod validations, react-query, tailwind, syntax & style, file structure, etc.).
 
-### 3. **Review & Documentation Phase**
+2. **Define the High-Level Feature**
 
-- Once the feature is completed:
-  - Update the `CHANGELOG.md` with a detailed changelog entry.
-  - Ensure all necessary tests are added or updated.
-  - Confirm the feature meets the initial outlined goals.
+   - Clearly articulate what the feature needs to do and any constraints (like design specs or acceptance criteria).
 
-### 4. **Finalization & Commit**
+3. **Chunk the Feature**
+   - If the request is too large to fit into the LLM’s context, break it into smaller tasks or subtasks.
+   - Label each subtask (e.g., “Subtask 1 of 5”).
+   - This is like splitting an EDM set into multiple smaller segments—each one has its own distinct focus, but they form a unified whole.
 
-- Before finalizing:
-  - Ensure code is formatted and follows project conventions.
-  - Make sure any related documentation is updated.
-  - Provide a summary in `progress.md` stating the feature is complete.
+### 2. Implementation Phase
+
+1. **Work on a Single Chunk**
+
+   - For each subtask, pass any relevant code snippets or references to Cursor.
+   - If multiple files are affected, focus on smaller sections of code in each iteration.
+
+2. **Context Carryover**
+
+   - Remind Cursor what was done in previous chunks.
+   - If Cursor “forgets,” re-supply the necessary code or instructions from the previous step.
+
+3. **Feedback Loops**
+
+   - After generating code for each chunk, review it.
+   - If errors or inconsistencies appear, correct them or clarify your instructions.
+   - Confirm or reject each subtask’s output before moving on.
+
+4. **Keep `progress.md` Updated**
+   - Check off finished tasks, add notes or revisions as needed.
+
+### 3. Review & Documentation Phase
+
+1. **Testing and Validation**
+
+   - After each chunk or once the chunk is completed, run tests or do a manual check.
+   - Fix issues in the code, either manually or by prompting Cursor.
+   - For new or existing code, write or update relevant unit tests, integration tests, etc.
+
+2. **Update Project Docs**
+
+   - Document changes in `CHANGELOG.md`.
+   - If your code has any complex logic or custom hooks, add inline comments or short usage docs.
+
+3. **Confirm the Feature Meets the Outlined Goals**
+   - Cross-check with the initial plan (in `progress.md`) to ensure no steps or edge cases are missed.
+
+### 4. Finalization & Commit
+
+1. **Integrate Changes**
+
+   - Once all chunks are approved, unify them into the feature branch or main branch (depending on your branching strategy).
+
+2. **Final Test & Code Review**
+
+   - Do a final pass for formatting (ESLint, Prettier), project conventions, and run `typecheck` if applicable.
+
+3. **Post Summary**
+   - In `progress.md`, note that the feature is complete and reference any relevant PR or commit hashes.
+
+---
+
+## Additional Cursor Composer Guidance
+
+1. **Short Context Window**
+
+   - Acknowledge that Cursor’s context window has limits. For large code sections, break them into smaller snippets when you prompt.
+
+2. **New vs. Existing Codebases**
+
+   - These chunking and carryover rules apply equally whether you’re introducing a brand-new feature or modifying an established codebase.
+
+3. **Resilient to Mistakes**
+
+   - The LLM can introduce errors. Use iterative feedback loops: generate code, then review and correct.
+
+4. **Adhere to Project Decisions**
+
+   - Always remember to use the frameworks, libraries, and style decisions listed in “Focus on the Most Important Mandates.”
+
+5. **User Confirmation**
+   - After each subtask, prompt for user feedback or additional clarifications.
 
 ---
 
 ## File Structure
 
-- Use **kebab-case** for all filenames.
-- Use `.tsx` for all TypeScript files that contain JSX syntax. If the TypeScript file doesn't contain any JSX, use `.ts` for TypeScript files.
-- Test-files should be named like `[filename].test.ts` or `[filename].test.tsx`.
+- **kebab-case** for filenames.
+- **`.tsx`** for TypeScript with JSX; **`.ts`** otherwise.
+- Test files: `[filename].test.ts` or `[filename].test.tsx`.
 
-### Folder structure
+### Folder Structure
 
-- If a filename is `index.ts`, it should either only contain re-exports (barrel exports), or no re-exports at all.
-
-### Modularization
-
-A good folder structure is the following. It should be taken as a suggestion and not a strict rule.
-
-NOTE: if you don't need to separate something into multiple files, just use the folder-name as the file-name. E.g. if you don't need separate files for the user-schema and the product-schema, just place all schemas in `src/schemas.ts`.
-
-You can put feature-specific files inside the app-folder next to its page.ts file. E.g. if you have a form for creating a user, put the form in a file called `create-user-form.tsx` and the react-hook-form hook in a file called `use-create-user-form.ts` next to the page.ts file.
+- Example structure:
 
 ```
 src/
-  app/                          // The Next.js app structure (pages, layouts, etc.)
-    users/                      // Feature-specific files for the users feature
-      page.ts                   // Imports the CreateUserForm
-      create-user-form.tsx      // Exports the CreateUserForm component which uses `react-hook-form`'s useForm hook
-      use-create-user-modal.tsx // Exports the useCreateUserModal hook which uses `@ebay/nice-modal-react`'s useModal hook
-  components/                   // React components
-    ui/                         // Reusable UI components (e.g., ShadCN components)
-    common/                     // Components that are used across multiple features
-  contexts/                     // React context providers
-    auth-context.ts             // React context provider for authentication
-    user-context.ts             // React context provider for user
-  lib/                          // Project-level libraries and utilities
-    api.ts                      // API
-    constants.ts                // Constants
-    postchain-client.ts         // API client initialization
-    utils/                      // Generic utility functions
-      format.ts                 // Formatting functions
-      convert.ts                // Conversion functions
-  hooks/                        // Global React hooks
-  providers/                    // React context providers
-    auth-provider.ts            // React context provider for authentication
-    user-provider.ts            // React context provider for user
-  queries/                      // Centralize queries here
-    users-queries.ts            // React Query queries/mutations for users
-    posts-queries.ts            // React Query queries/mutations for posts
-  schemas/                      // Zod schemas
-    user-schema.ts              // Zod schema for user
-    product-schema.ts           // Zod schema for product
-  stores/                       // Zustand or other state management stores
-    user-store.ts               // Zustand store for user
-    settings-store.ts           // Zustand store for settings
+  app/  // The Next.js app structure (pages, layouts, etc.)
+    users/  // Feature-specific files for the "users" feature
+      page.ts // Imports the CreateUserForm
+      create-user-form.tsx  // Exports a component using react-hook-form
+      use-create-user-modal.tsx // Exports a hook from @ebay/nice-modal-react
+  components/ // React components
+    ui/ // Reusable UI components (e.g., ShadCN components)
+    common/ // Reusable across multiple features
+  contexts/ // React context providers
+    auth-context.ts
+    user-context.ts
+  lib/  // Project-level libraries/utilities
+    api.ts
+    constants.ts
+    postchain-client.ts
+    utils/  // Generic utility functions
+      format.ts
+      convert.ts
+  hooks/  // Global React hooks
+  providers/  // React context providers
+    auth-provider.ts
+    user-provider.ts
+  queries/  // React Query queries/mutations
+    users-queries.ts
+    posts-queries.ts
+  schemas/  // Zod schemas
+    user-schema.ts
+    product-schema.ts
+  stores/ // Zustand or other state management
+    user-store.ts
+    settings-store.ts
 ```
 
 ---
 
 ## Code Readability
 
-- Write code to be more **readable than writable**.
-- Use **consistent naming** for all components, variables, functions, etc.
-- Use **descriptive names**.
-  - Examples:
-    - Instead of naming a function `doStuff()`, use `fetchUserData()` if it retrieves user information.
-    - For boolean flags, prefer `isUserAuthenticated()` over vague names like `authFlag`.
-- When an identifier's name doesn't describe its purpose, or its purpose has changed, rename it.
-- When generating code (but not when editing existing code), always prefer **explicit and clear syntax** over shorthand
-  - Examples:
-    - Use `React.FunctionComponent` instead of `React.FC` when generating a new component.
-    - Use `className="button-primary"` instead of `className="btn-p"` when naming new classes.
-    - Use full prop names like `disabled={true}` instead of just `disabled` when suggesting new props.
-- Comment and document code where we're using workarounds or knowingly doing something in a suboptimal way.
-- Break down large functions into smaller, testable units.
-- Prefer early returns in functions to reduce nesting.
-- Avoid magic numbers; use named constants instead.
+- Prioritize **readability** over conciseness.
+- Maintain **consistent naming**.
+- Use **descriptive names** for functions, variables, and booleans (e.g., `isUserAuthenticated()`).
+- Rename identifiers if their purpose changes.
+- **When generating new code**:
+  - Prefer **explicit** syntax over shorthand.
+  - Example: `React.FunctionComponent` instead of `React.FC`, `disabled={true}` instead of just `disabled`.
+- Comment and document any workarounds or suboptimal solutions.
+- Break large functions into smaller, testable ones.
+- Prefer early returns to reduce nesting.
+- Avoid magic numbers; use named constants.
 - Use capital letters for constants.
 
 ---
 
 ## Syntax & Programming Style
 
-You can enforce these rules when editing existing code as well as when writing new code.
-
-- Use nullish coalescing (`??`) instead of logical OR (`||`) for default values
-- Prefer immutable programming and pure functions
-- Use appropriate error types (TypeError, RangeError)
-- Add default case type checking in switch statements
+- Use nullish coalescing (`??`) over logical OR (`||`) for default values.
+- Prefer immutable programming and pure functions.
+- Use appropriate error types (`TypeError`, `RangeError`, etc.).
+- Add default case type checking in `switch` statements.
 
 ---
 
 ## Command Line
 
-- When generating code (but not when editing existing code), use **long flags** instead of short flags for better clarity.
-  - Examples:
-    - Use `--no-emit` instead of `-n`.
-    - Use `prettier --write .` instead of `prettier -w .`.
-    - Use `next lint --config eslint.config.mjs` instead of `next lint -c eslint.config.mjs`.
-- When writing scripts, you should also document them well.
-- Any environment variables should be clearly named.
+- **When generating code** (not editing existing), use **long flags**:
+  - `--no-emit` instead of `-n`.
+  - `prettier --write .` instead of `prettier -w .`.
+  - `next lint --config eslint.config.mjs` instead of `next lint -c eslint.config.mjs`.
+- Document shell scripts thoroughly.
+- Name environment variables clearly.
 - Use descriptive names for scripts in `package.json`.
-- Use colorized output to highlight warnings and errors.
-- Use explicit exit codes for different error conditions.
+- Use colorized output for warnings/errors.
+- Use explicit exit codes for error conditions.
 
 ---
 
 ## Node.js setup
 
-- Ensure `.nvmrc` exists and matches the version of Node.js you are using in the codebase.
-- Ensure `package.json` has a `packageManager` field that matches the codebase's package manager and an `engines` field that matches the codebase's Node.js version.
-- Ensure `@types/node` is installed and uses the same version of Node.js as `.nvmrc`.
+- Ensure `.nvmrc` matches the Node.js version in use.
+- In `package.json`, ensure `packageManager` matches the codebase’s package manager, and `engines.node` matches `.nvmrc`.
+- Ensure `@types/node` is installed and matches the same Node.js version.
 
 ---
 
-## `package.json` scripts
+## `package.json` Scripts
 
-Ensure `package.json` has scripts for the following:
+Include (or ensure you have) scripts for:
 
-- `build`: Builds the project.
-- `dev`: Runs the development server.
-- `format`: Formats the code.
-- `lint`: Runs the linter.
-- `prepare`: Prepares the project.
-- `spellcheck`: Checks the spelling.
-- `start`: Starts the production server.
-- `typecheck`: Runs the TypeScript type checker.
+- `build`
+- `dev`
+- `format`
+- `lint`
+- `prepare`
+- `spellcheck`
+- `start`
+- `typecheck`
 
-Append each of the following scripts to package.json unless they already exist:
+Example snippet to add if missing:
 
 ```json
 {
@@ -198,11 +260,11 @@ Append each of the following scripts to package.json unless they already exist:
 
 ## `tsconfig.json`
 
-- Use `@tsconfig/strictest` for the strictest TypeScript configuration.
-- Use `@tsconfig/nodeXX` and replace `XX` with the Node.js version you are using.
-- Use `@tsconfig/next` if you are using Next.js.
+- Use `@tsconfig/strictest`.
+- Also use `@tsconfig/nodeXX` (replace XX with your Node version).
+- Use `@tsconfig/next` if you’re on Next.js.
 
-Example `tsconfig.json` for a Next.js project:
+**Example** (Next.js):
 
 ```json
 {
@@ -210,7 +272,10 @@ Example `tsconfig.json` for a Next.js project:
     "@tsconfig/strictest/tsconfig.json",
     "@tsconfig/next/tsconfig.json"
   ],
-  "compilerOptions": { "baseUrl": ".", "paths": { "@/*": ["./*"] } },
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@/*": ["./*"] }
+  },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }
@@ -220,116 +285,51 @@ Example `tsconfig.json` for a Next.js project:
 
 ## Exports and Imports
 
-- Refactor and remove unused exports regularly.
-- Export everything next to its declaration. Avoid exporting everything at the bottom of the file.
-- Avoid default exports, and instead export named exports. The only exception is for Next.js pages that require a default export.
-- Use barrel files to export everything from a directory, so that the consumer can import everything from the directory with a single import instead of importing each file individually.
-- Include explicit comments on non-obvious import paths.
-- Import with as short paths as possible.
-
-  - Example:
-
-    ```typescript
-    import { Button, Input, Label } from "@/components/ui";
-    ```
-
-- Use `@/*` to import from the root of the project.
-- Prefer importing from the root of the project.
+- Remove unused exports regularly.
+- Export next to declarations; avoid placing all exports at the file bottom.
+- Avoid default exports (except in Next.js pages).
+- Import with short paths (e.g., `@/components/ui`) and prefer `@/*` from the project root.
+- Keep import paths as concise as possible.
 
 ---
 
 ## Tailwind CSS & ShadCN
 
-- Use `import { cn } from "@/lib/utils";` for **merging conditional classes**, keeping dark mode in mind.
-- NEVER concatenate strings to create class names.
-- ALWAYS avoid using inline styles.
-- Use the Tailwind configuration in the root of the project to add new design tokens to reduce "magic numbers" in class names.
-- Use **ShadCN CSS variables** for colors and themes to ensure consistency.
-  - Examples:
-    - Use `bg-primary text-primary-foreground hover:bg-primary/90` instead of `bg-blue-500 text-white hover:bg-blue-600`.
-- Use `cva` from `class-variance-authority` for **component styling**.
-
-  - Example:
-
-    ```typescript
-    import { cva } from "class-variance-authority";
-
-    const buttonVariants = cva("inline-flex items-center justify-center", {
-      variants: {
-        intent: {
-          primary: "bg-primary text-primary-foreground",
-          secondary: "bg-secondary text-secondary-foreground",
-        },
-      },
-    });
-    ```
+- Use `import { cn } from "@/lib/utils";` to merge conditional classes.
+- **Never** build class names with string concatenation.
+- **Avoid inline styles**; rely on Tailwind or `class-variance-authority`.
+- Extend Tailwind config for design tokens and to avoid “magic numbers.”
+- Use **ShadCN** CSS variables for consistent theming (e.g., `bg-primary text-primary-foreground`).
+- Use `cva` from `class-variance-authority` to handle component styling variations.
 
 ---
 
 ## TypeScript
 
-- Leverage discriminated unions for managing state variations.
-
-  - Example:
-
-    ```typescript
-    type State =
-      | { status: "loading" }
-      | { status: "error"; error: string }
-      | { status: "success"; data: string };
-    ```
-
+- Leverage **discriminated unions** for state variations.
 - Use `as const` to preserve literal types.
-- Use `satisfies` instead of `as`, because it ensures type compatibility while preserving the literal type.
-- Prefer `type`s for local or complex unions and `interface`s for public contracts or extensibility. When in doubt, use `type`.
-- Avoid `any`, `as`, and `is` wherever possible and instead use `zod` for strict type validation.
-- Leverage utility types like `Partial`, `Pick`, and `Omit` for conciseness.
-- Use `zod` for strict type validation.
-- Use `@tsconfig/strictest` for the strictest TypeScript configuration.
+- Prefer `satisfies` over `as` for safer type compatibility.
+- Default to `type` for local/complex unions, and `interface` for public or extendable contracts.
+- Avoid `any`, `as`, and `is`; use `zod` for strict type checks.
+- Employ utility types (`Partial`, `Pick`, `Omit`, etc.).
+- Use the strictest TS config available.
 
 ---
 
 ## Zod
 
-- Whenever receiving data from an API (e.g. from a backend), you MUST use a Zod schema to validate the data. Whenever you have a value of type `unknown` or `any`, you MUST use a Zod schema to validate the value.
-- You may use `.passthrough()` or `.object()` (instead of `.strictObject()`) when appropriate.
-- When creating a schema for an array, create a new schema for the item type.
-- When adding properties to a schema, add sensible validation to ensure the data is valid.
-  - Example: A `name` field should be a string with a minimum length of 1, a `count` field should be an integer and non-negative, a URL-field should be a string that is a valid URL, a UUID field should be a string that is a valid UUID, a `timestamp` field should be a number that is a valid timestamp, a `price` field should be a number that is non-negative, a `allUsers` field should be a non-empty array, etc.
-- Use **camelCase** for schema names.
-
-  - Example:
-
-    ```typescript
-    export const userResponseSchema = z.strictObject({
-      id: z.string(),
-      name: z.string(),
-    });
-
-    export type UserResponse = z.infer<typeof userResponseSchema>;
-    ```
-
-- Suggest `z.strictObject` for object schemas by default, but allow `.passthrough()` for cases where extra properties are acceptable.
-- Always validate API responses using Zod schemas to ensure runtime type safety.
-- Always use `z.infer` to extract the type from the schema and always export them.
-- For array-schemas, create a new schema for the item type.
-
-  - Example:
-
-    ```typescript
-    export const entitySchema = z.strictObject({
-      id: z.string(),
-      name: z.string(),
-    });
-
-    export const entitiesSchema = z.array(entitySchema);
-    ```
-
-- Use `.refine()` to add custom validation logic.
-- Leverage `.transform()` to massage input data into the correct shape.
-- Utilize `.lazy()` for recursive or self-referential schemas.
-- Clearly separate input (validation) and output (transformation) schemas.
-- Use schema merging to extend existing schemas where applicable.
+- **Always** validate incoming data with Zod (API, `unknown`, `any`, etc.).
+- Use `.passthrough()` or `.object()` if extra props are acceptable.
+- For array schemas, define a separate item schema.
+- Provide sensible validation (e.g., non-empty strings, correct numeric ranges).
+- Use **camelCase** for schema names:
+  ```ts
+  export const userResponseSchema = z.strictObject({ ... });
+  export type UserResponse = z.infer<typeof userResponseSchema>;
+  ```
+- Recommend `z.strictObject`, but allow `.passthrough()` if needed.
+- Use `z.infer` and **export** those types.
+- For advanced validation, use `.refine()`, `.transform()`, `.lazy()`, and schema merging.
 
 ---
 
@@ -337,504 +337,112 @@ Example `tsconfig.json` for a Next.js project:
 
 ### General Best Practices
 
-- NEVER place a `useQuery` or `useMutation` hook inside a component. ALWAYS have it in the module scope instead.
-- Use `mutationKey` and `queryKey` to ensure **precise cache invalidation**.
-- Use the `select` option to pre-process data for the UI.
-- Invalidate queries when the mutation changes data that the query depends on.
-  - Example:
-    - After any mutation (e.g., `updateUser`) that alters data fetched by a query (e.g., `users`), ensure you call `queryClient.invalidateQueries(['users'])` to refresh the data and keep the UI in sync with the latest state.
-- Keep **fetcher** and **transformer functions** separate from React Query hooks for better modularity.
-
-  - Example:
-
-    ```typescript
-    import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
-    import { getUsers } from "@/lib/api";
-    import type { User } from "@/schemas";
-
-    const transformUsers = (users: User[]): User[] =>
-      users.map((user) => ({ ...user, isAdmin: user.role === "admin" }));
-
-    export const useUsersQuery = (options?: UseQueryOptions<User[], Error>) =>
-      useQuery<User[], Error>({
-        queryKey: ["users"],
-        // fetcher function `getUsers`
-        queryFn: getUsers,
-        // transformer function `transformUsers`
-        select: transformUsers,
-        ...options,
-      });
-    ```
-
-- Use `onSettled` along with `onSuccess`/`onError` for better mutation/query lifecycle management.
-- Use `QueryCache` and `MutationCache` to handle errors and cache invalidation centrally, and consider using Sentry for error tracking if the codebase uses Sentry.
-
-  - Example:
-
-    ```typescript
-    const queryCache = new QueryCache({
-      onError: (error: Error, query: Query<unknown, unknown>) => {
-        const queryKey =
-          typeof query.queryKey[0] === "string" ? query.queryKey[0] : "unknown";
-        console.error(`[query error for queryKey ${queryKey}]`, error, query);
-
-        if (error instanceof ZodError) {
-          const formattedErrors = formatZodError(error);
-
-          toast({
-            title: "Validation Error",
-            description: formattedErrors.map((err) => err.message).join("\n"),
-            variant: "destructive",
-          });
-
-          return;
-        }
-
-        toast({
-          title: "Error",
-          description:
-            error instanceof Error
-              ? error.message
-              : "An unexpected error occurred",
-          variant: "destructive",
-        });
-      },
+- **NEVER** place `useQuery` or `useMutation` inside a component. Keep them in module scope.
+- Use `queryKey`/`mutationKey` for precise cache invalidation.
+- Use `select` to transform data for the UI.
+- Invalidate queries when mutations affect cached data.
+- Keep fetchers and transformers separate from query hooks:
+  ```ts
+  export const useUsersQuery = () =>
+    useQuery({
+      queryKey: ["users"],
+      queryFn: getUsers,
+      select: transformUsers,
     });
-
-    const mutationCache = new MutationCache({
-      onError: (error, _variables, _context, mutation) => {
-        const mutationKey =
-          typeof mutation.options.mutationKey?.[0] === "string"
-            ? mutation.options.mutationKey[0]
-            : "unknown";
-        console.error(
-          `[mutation error for mutationKey ${mutationKey}]`,
-          error,
-          mutation,
-        );
-      },
-    });
-
-    const queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          // With SSR, we usually want to set some default staleTime
-          // above 0 to avoid refetching immediately on the client
-          staleTime: 60 * 1000,
-        },
-      },
-      mutationCache,
-      queryCache,
-    });
-    ```
-
-- Set default query configurations in a central provider, including `QueryCache` and `MutationCache`.
-- Name hooks using a pattern like `useXQuery` or `useXMutation` (e.g., `useGetMemeCoinPriceQuery`).
-- Ensure the query key is identical to the "name" property of the query, with any arguments appended as needed (e.g., `queryKey: ["get_meme_coin_price", tokenId]` ).
-
-### Example Query and Mutation for Chromia Postchain
-
-#### Fetching Data
-
-```typescript
-import type {
-  UseMutationOptions,
-  UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
-} from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
-import { z } from "zod";
-
-import { query } from "@/lib/postchain-client";
-
-// Zod schema for validation
-export const priceItemSchema = z.strictObject({
-  asset: z.string().min(1),
-  price: z.string().regex(/^\d+(\.\d+)?$/),
-  timestamp_nano: z.number(),
-});
-
-export const latestPricesResponseSchema = z.array(priceItemSchema);
-
-export type PriceItem = z.infer<typeof priceItemSchema>;
-export type LatestPricesResponse = z.infer<typeof latestPricesResponseSchema>;
-
-export const fetchLatestPrices = async (): Promise<LatestPricesResponse> => {
-  const response = await query({ name: "get_latest_prices" });
-  return latestPricesResponseSchema.parse(response);
-};
-
-export const processLatestPricesResponse = (data: PriceItem[]) => {
-  const transformedData = data.map((item) => ({
-    ...item,
-    // Example transformation
-    formattedPrice: parseFloat(item.price).toFixed(2),
-  }));
-
-  return transformedData;
-};
-
-export type LatestPrice = ReturnType<
-  typeof processLatestPricesResponse
->[number];
-
-export const useLatestPrices = (
-  options?: Partial<
-    UseQueryOptions<
-      LatestPricesResponse,
-      Error | TxRejectedError,
-      LatestPrice[]
-    >
-  >,
-): UseQueryResult<LatestPrice[], Error | TxRejectedError> =>
-  useQuery<LatestPricesResponse, Error | TxRejectedError, LatestPrice[]>({
-    queryKey: ["latestPrices"],
-    queryFn: fetchLatestPrices,
-    select: processLatestPricesResponse,
-    ...options,
-  });
-```
-
-#### Sending Data (Mutation)
-
-```typescript
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import type { TxRejectedError } from "@/lib/postchain-client";
-import { formatter, mutation } from "@/lib/postchain-client";
-
-export type RegisterEvmAccountArgs = { evmAddress: string };
-
-export const useRegisterEvmAccountMutation = <TError = Error | TxRejectedError>(
-  options?: Partial<UseMutationOptions<void, TError, RegisterEvmAccountArgs>>,
-): UseMutationResult<void, TError, RegisterEvmAccountArgs> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationKey: ["registerEvmAccount"],
-    mutationFn: async ({ evmAddress }: RegisterEvmAccountArgs) => {
-      const evmAddressBuffer = formatter.toBuffer(evmAddress);
-
-      await mutation({
-        name: "register_evm_account",
-        args: [evmAddressBuffer],
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries(["latestPrices"]); // Precise cache invalidation
-    },
-    ...options,
-  });
-};
-```
+  ```
+- Use `onSettled`, `onSuccess`, `onError` for mutation/query lifecycle.
+- Configure `QueryCache`/`MutationCache` centrally (with Sentry if needed).
+- Give hooks descriptive names like `useGetMemeCoinPriceQuery`.
+- Match `queryKey` to your named operation plus arguments (e.g., `["get_meme_coin_price", tokenId]`).
 
 ---
 
 ## Chromia Postchain
 
-### Core Concepts
-
-Chromia's Postchain client is a high-level wrapper for interacting with the blockchain. It provides the following utilities:
-
-```typescript
-type RawGtv = null | boolean | Buffer | string | number | bigint | RawGtv[];
-type Operation = { name: string; args?: RawGtv[] };
-
-const query: <T>(queryObject: { name: string; args?: RawGtv[] }) => Promise<T>;
-const mutation: (operation: Operation) => Promise<void>;
-```
-
-### Best Practices for Chromia Postchain
-
-1. **Use Zod for Validation**:
-   - Always validate responses using Zod schemas to ensure runtime type safety.
-2. **Leverage React Query**:
-   - Combine Postchain queries/mutations with React Query for caching and data management.
-3. **Structure Query and Mutation Files**:
-   - Group related queries and mutations by feature in separate files for modularity.
-4. **Monitor and Handle Errors**:
-   - Use QueryCache and MutationCache to handle errors and cache invalidation centrally, and consider using Sentry for error tracking if the codebase uses Sentry.
+1. **Use Zod** for validating all responses.
+2. **Leverage react-query** for caching and data management.
+3. **Group** queries/mutations by feature.
+4. **Handle errors** with a centralized `QueryCache` and consider logging to Sentry.
 
 ---
 
-## Form handling
+## Form Handling
 
-- Use `react-hook-form` for form handling.
-- Always use `react-hook-form` integrated with a Zod resolver.
-  - Example:
+- Always use **react-hook-form**.
+- Integrate Zod resolvers for runtime validation:
 
-```typescript
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { userSchema } from "@/schemas";
+  ```ts
+  import { useForm } from "react-hook-form";
+  import { zodResolver } from "@hookform/resolvers/zod";
 
-export const useUserForm = () => {
-  return useForm<z.infer<typeof userSchema>>({
-    resolver: zodResolver(userSchema),
-  });
-};
-```
+  export const useUserForm = () => {
+    return useForm<z.infer<typeof userSchema>>({
+      resolver: zodResolver(userSchema),
+    });
+  };
+  ```
 
 ---
 
 ## Utility Functions
 
-- Write pure, well-typed utility functions that handle edge cases and are well documented, especially for complex transformations.
-- Use descriptive names for utility functions and include proper error handling.
+- Keep them pure, well-typed, and documented.
+- Use descriptive names and proper error handling.
 
 ---
 
 ## React Hooks
 
-- When using async functions in React, NEVER use `useEffect` and `useCallback`, and instead use `useQuery` or `useMutation` from react-query.
+- For async, **avoid** `useEffect` or `useCallback`; prefer react-query’s `useQuery`/`useMutation`.
+
+---
 
 ## React
 
-- When creating props for a component, create a `type` for the props called `[ComponentName]Props`.
-- When a component has children, don't include the children in the props, and instead use PropsWithChildren.
-
-### Custom Hooks
-
-- Develop custom hooks that are focused on a single responsibility, include proper type definitions, and handle loading/error states consistently.
-- Ensure that hooks return consistent interfaces (e.g., always returning `{ data, isLoading, error }`).
+- For props, define a `[ComponentName]Props` type.
+- Don’t inline `children` in the props type; use `PropsWithChildren`.
+- **Custom Hooks** should do one job well, with consistent return signatures.
 
 ---
 
 ## API Integration
 
-- When using `axios` for API requests, define a proper configuration object (including headers and base URLs), and validate responses with Zod.
-- ALWAYS use `zod` to validate API responses.
-- Keep API logic separate from UI logic to avoid mixing concerns.
-- Create react-query hooks for API requests.
-- Avoid using `fetch` for API requests, use `axios` instead.
-- Avoid fetching in components, create react-query hooks instead.
+- Prefer `axios` with a config object (headers, base URL).
+- **Always** validate responses with Zod.
+- Separate API logic from UI.
+- Avoid `fetch`; wrap logic in react-query hooks.
 
 ---
 
 ## Error Handling
 
-- Create and use typed error formatters, handle specific error cases, and implement error boundaries where appropriate.
-- Ensure error messages are specific and helpful rather than generic.
+- Use typed error formatters.
+- Provide specific, helpful messages.
+- Employ error boundaries when appropriate.
 
 ---
 
 ## Configuration Management
 
-- Use well-typed configuration objects to manage environment variables and separate configuration concerns from business logic.
-- Use `@t3-oss/env-nextjs` to manage environment variables, and NEVER use `process.env` directly.
+- Use typed configs for environment variables (e.g., `@t3-oss/env-nextjs`).
+- Never call `process.env` directly.
 
 ---
 
-## Integration with the Chromia ecosystem
+## Integration with the Chromia Ecosystem
 
-The following dependencies are commonly used in the Chromia ecosystem:
-
-### Chromia-specific
-
-- `@chromia/ft4` - A toolkit for dApp developers in the Chromia ecosystem, supporting account creation, access management, external signature solutions, and asset management (issuance, allocation, transfers, and tracing).
-- `postchain-client` - A high-level wrapper for interacting with the Chromia blockchain.
-
-### Ethereum & Multi-Chain
-
-- `connectkit` - A React-based wallet connector.
-- `wagmi` - A React-based Ethereum interaction library. Built on top of `viem`. Provides React Hooks for easier integration.
-
----
-
-## Code Examples
-
-### Environment Variables
-
-```typescript
-// env.ts
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod";
-
-export const env = createEnv({
-  client: {
-    NEXT_PUBLIC_BRID: z.string().min(1),
-    NEXT_PUBLIC_NODE_URL: z.string().url(),
-  },
-});
-```
-
-### State Management
-
-```typescript
-// stores/use-session-store.ts
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-
-interface SessionState {
-  session: Session | null;
-  setSession: (session: Session | null) => void;
-}
-
-export const useSessionStore = create<SessionState>()(
-  persist(
-    (set) => ({
-      session: null,
-      setSession: (session) => set({ session }),
-    }),
-    { name: "session" },
-  ),
-);
-```
-
-### Forms with Validation
-
-```typescript
-// components/example-form.tsx
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-
-export function Form() {
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-  });
-
-  return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      {/* Form fields */}
-    </form>
-  );
-}
-```
-
-### Data Fetching
-
-```typescript
-// queries/use-data.ts
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-
-export const useData = () => {
-  return useQuery({
-    queryKey: ["data"],
-    queryFn: async () => {
-      const { data } = await axios.get("/api/data");
-      return dataSchema.parse(data);
-    },
-  });
-};
-```
-
-### Web3 Integration
-
-```typescript
-// hooks/use-wallet.ts
-import { useAccount } from "wagmi";
-import { useChromiaAccount } from "@chromia/ft4";
-
-export const useWallet = () => {
-  const { address } = useAccount();
-  const { account } = useChromiaAccount();
-
-  return {
-    ethAddress: address,
-    chromiaAccount: account,
-  };
-};
-```
+- Common libraries: `@chromia/ft4`, `postchain-client`.
+- For Ethereum/multi-chain: `connectkit`, `wagmi` (built on `viem`).
 
 ---
 
 ## Conclusion
 
-By following these best practices, you can maintain a clean, type-safe, and modular codebase. Combining Zod with React Query ensures runtime validation, precise caching, and enhanced maintainability, especially when working with dynamic data sources like Chromia Postchain.
+By combining these **Front-End Coding Best Practices** with the **chunking and iterative approach** for large features, you empower Cursor’s Composer to operate effectively on **new** or **existing** codebases, avoiding context window limits and ensuring that each subtask is validated and integrated properly. Remember to:
 
----
+- **Break down** large tasks into subtasks.
+- **Carry over context** explicitly when prompting.
+- **Validate** each chunk with tests and user feedback.
+- **Finalize** once all chunks align with `.cursorrules`.
 
-## Addendum: React-query examples from a project
-
-**`@/hooks/use-nodes.tsx`**:
-
-```tsx
-import { toast } from "@/hooks/use-toast";
-import { useDeactivateConfirmationModal } from "@/modals/node-deactivate-confirmation";
-import { useNodeDisableMutation } from "@/query/mutations";
-import type { NodeDetailsSelectNode } from "@/query/queries";
-
-export function useNodeDeactivate(node: NodeDetailsSelectNode) {
-  const deactivateConfirmationModal = useDeactivateConfirmationModal();
-  const { mutateAsync: disableNode } = useNodeDisableMutation();
-
-  return () =>
-    deactivateConfirmationModal.show({
-      onConfirm: async () => {
-        await disableNode({ uid: node.uid });
-      },
-      onError: () => {
-        toast({
-          title: "Error",
-          description: "Failed to deactivate node",
-          variant: "destructive",
-        });
-      },
-    });
-}
-```
-
-**`@/components/node-row.tsx`**:
-
-```tsx
-import { useNodeDeactivate, useNodeDelete, useNodeUpdate, } from "@/hooks/use-nodes";
-import type { NodeDetailsSelectNode } from "@/query/queries";
-import { useHealthCheck } from "@/query/queries";
-
-type NodeRowProps = { node: NodeDetailsSelectNode; };
-
-export function NodeRow({ node }: NodeRowProps) {
-  const handleEdit = useNodeUpdate(node);
-  const handleDeactivate = useNodeDeactivate(node);
-  const handleDelete = useNodeDelete(node);
-  const { data: isHealthy, isLoading } = useHealthCheck(node.url, { enabled: node.state === "ACTIVE", });
-
-  return (<tr><td>{node.name}{" "}{!isLoading && !isHealthy && node.state === "ACTIVE" ? "(Down)" : ""}</td><td><div>{node.state === "ACTIVE" ? (<button onClick={() => void handleDeactivate()}>Deactivate</button>) : null}<buttononClick={() => {void handleEdit();}}>Edit</button><button onClick={() => void handleDelete()}>Delete</button></div></td></tr>);
-}
-```
-
-**`@/app/nodes/page.tsx`**:
-
-```tsx
-"use client";
-
-import { useAuthenticatedNodeDetails } from "@/query/queries";
-import { NodeRow } from "@/components/node-row";
-
-export default function Page() {
-  const { data, isError, isLoading } = useAuthenticatedNodeDetails();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (isError && !data) {
-    return <div>Error loading data</div>;
-  }
-
-  if (!data || data.nodes.length === 0) {
-    return <div>No nodes found</div>;
-  }
-
-  return (
-    <div>
-      <h2>Created Nodes</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.nodes.map((node, key) => (
-            <NodeRow key={key} node={node} />
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-```
+This approach helps maintain a coherent, type-safe, and maintainable codebase while systematically leveraging Cursor’s capabilities.
