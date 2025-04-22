@@ -191,6 +191,140 @@ src/
 - Ensure all components work properly in a static export environment.
 - Use `next.config.ts` to configure static export settings properly.
 
+### Next.js Deployment Configuration
+
+- **Always set `basePath` when deploying to non-root paths**:
+  ```typescript
+  // For production environments with subpath deployment
+  export const basePath = 
+    process.env.NODE_ENV === "production" 
+      ? `/your_app_path/${process.env.DEPLOYMENT_ID}/static` 
+      : "";
+  
+  const nextConfig: NextConfig = {
+    basePath,
+    // other config...
+  };
+  ```
+
+- **Configure static exports correctly**:
+  ```typescript
+  const nextConfig: NextConfig = {
+    output: "export",
+    images: {
+      unoptimized: true, // Required for static exports
+    },
+    // other config...
+  };
+  ```
+
+- **Handle redirects conditionally for development vs. static export**:
+  ```typescript
+  ...(process.env.NODE_ENV === "development"
+    ? {
+        // Redirects only in development
+        redirects: async () => [
+          {
+            source: "/docs",
+            destination: env.NEXT_PUBLIC_DOCS_URL,
+            permanent: true,
+          },
+        ],
+      }
+    : {
+        // Static export configuration for production
+        output: "export",
+      }),
+  ```
+
+- **GitHub Pages Deployment Workflow**:
+  For deploying Next.js sites to GitHub Pages, use a workflow like this:
+  ```yaml
+  name: Deploy Next.js site to Pages
+
+  on:
+    push:
+      branches: ["main"]
+    workflow_dispatch:
+
+  permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+  concurrency:
+    group: "pages"
+    cancel-in-progress: false
+
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Setup Node.js
+          uses: actions/setup-node@v4
+          with:
+            node-version-file: ".nvmrc"
+
+        - name: Enable Corepack
+          run: corepack enable
+
+        - name: Setup Pages
+          uses: actions/configure-pages@v5
+          with:
+            # Automatically injects basePath for GitHub Pages
+            static_site_generator: next
+
+        - name: Get pnpm store directory
+          shell: bash
+          run: |
+            echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+        - uses: actions/cache@v4
+          name: Setup pnpm cache
+          with:
+            path: ${{ env.STORE_PATH }}
+            key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+            restore-keys: |
+              ${{ runner.os }}-pnpm-store-
+
+        - name: Restore Next.js cache
+          uses: actions/cache@v4
+          with:
+            path: |
+              .next/cache
+            key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+            restore-keys: |
+              ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
+
+        - name: Install dependencies
+          run: pnpm install
+
+        - name: Build with Next.js
+          run: pnpm next build
+
+        - name: Upload artifact
+          uses: actions/upload-pages-artifact@v3
+          with:
+            path: ./out
+
+    deploy:
+      environment:
+        name: github-pages
+        url: ${{ steps.deployment.outputs.page_url }}
+      runs-on: ubuntu-latest
+      needs: build
+      steps:
+        - name: Deploy to GitHub Pages
+          id: deployment
+          uses: actions/deploy-pages@v4
+  ```
+  The `actions/configure-pages@v5` action with `static_site_generator: next` automatically:
+  - Injects the correct `basePath` for GitHub Pages
+  - Disables server-side image optimization
+
 ## Development Standards
 
 ### Code Readability
@@ -207,6 +341,296 @@ src/
 - Prefer early returns to reduce nesting.
 - Avoid magic numbers; use named constants.
 - Use capital letters for constants.
+
+### Code Formatting
+
+- Configure Prettier with Tailwind plugin for consistent class ordering:
+  ```js
+  // prettier.config.js or .prettierrc.js
+  module.exports = {
+    plugins: ["prettier-plugin-tailwindcss"],
+    tailwindFunctions: ["cva", "cn"],
+  };
+  ```
+- This ensures Tailwind classes follow the recommended sort order
+- Also preserves class ordering in `cva` and `cn` function calls
+- Run format checks during CI and as pre-commit hooks
+- Maintain consistent indentation and line endings
+
+### Pre-commit Hooks with Husky
+
+Set up Husky to run linting and formatting before each commit:
+
+#### Installation and Setup
+
+```bash
+# Install Husky and related tools
+pnpm add -D husky lint-staged pretty-quick
+
+# Configure husky
+pnpm exec husky init
+```
+
+#### Configuration by Package Manager
+
+**For pnpm projects** (recommended):
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run type checking first to catch type errors
+pnpm run typecheck
+
+# Run formatting and linting
+$(pnpm bin)/pretty-quick --staged
+$(pnpm bin)/lint-staged
+```
+
+**For npm projects**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run type checking first
+npm run typecheck
+
+# Run formatting and linting
+npx --no-install pretty-quick --staged
+npx --no-install lint-staged
+```
+
+**For Yarn projects**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run type checking first
+yarn typecheck
+
+# Run formatting and linting
+"$(yarn bin)"/pretty-quick --staged
+"$(yarn bin)"/lint-staged
+```
+
+**For Bun projects**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run type checking first
+bun run typecheck
+
+# Run formatting and linting
+bun run pretty-quick --staged
+bun run lint-staged
+```
+
+#### Configure lint-staged in package.json
+
+```json
+{
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "eslint --fix"
+    ],
+    "*.{json,md,mdx,css,html,yml,yaml}": [
+      "prettier --write"
+    ]
+  }
+}
+```
+
+This setup ensures that:
+- TypeScript type checking runs first to catch type errors
+- Code formatting is applied to staged files
+- Linting rules are checked and fixed where possible
+- Different commands are optimized for each package manager
+
+#### Pre-push Hooks
+
+For more rigorous checks before pushing to the remote repository, add a pre-push hook:
+
+```bash
+# Create a pre-push hook
+pnpm exec husky add .husky/pre-push "pnpm run typecheck"
+```
+
+**For pnpm projects** (recommended):
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run full type checking
+pnpm run typecheck
+
+# Optionally check formatting on files changed since main branch
+git diff "origin/main" --diff-filter=ACM --name-only -z | xargs -0 $(pnpm bin)/prettier --ignore-unknown --check
+```
+
+**For npm projects**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run full type checking
+npm run typecheck
+
+# Optionally check formatting on files changed since main branch
+git diff "origin/main" --diff-filter=ACM --name-only -z | xargs -0 npx --no-install prettier --ignore-unknown --check
+```
+
+**For Yarn projects**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run full type checking
+yarn typecheck
+
+# Optionally check formatting on files changed since main branch
+git diff "origin/main" --diff-filter=ACM --name-only -z | xargs -0 "$(yarn bin)"/prettier --ignore-unknown --check
+```
+
+**For Bun projects**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run full type checking
+bun run typecheck
+
+# Optionally check formatting on files changed since main branch
+git diff "origin/main" --diff-filter=ACM --name-only -z | xargs -0 bun run prettier --ignore-unknown --check
+```
+
+The pre-push hook adds an extra layer of validation:
+- Runs complete type checking across the entire codebase
+- Verifies formatting on all files changed since the main branch
+- Can be temporarily disabled with `git push --no-verify` when needed
+
+#### Prepare Commit Message Hooks
+
+Use prepare-commit-msg hooks to standardize commit messages with tools like Commitizen or to automatically prefix commits with JIRA issue keys.
+
+**Commitizen Integration**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Skip during merge commits
+if [ "$2" != "message" ] && [ "$2" != "merge" ]; then 
+  exec < /dev/tty && $(pnpm bin)/cz --hook "$1" "$2" "$3" || true
+fi
+```
+
+**JIRA Issue Key Integration (Basic)**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# For pnpm
+$(pnpm bin)/jira-prepare-commit-msg $1
+
+# For npm
+# npx --no-install jira-prepare-commit-msg $1
+
+# For yarn
+# yarn exec jira-prepare-commit-msg $1
+```
+
+**Advanced JIRA Integration (Without Dependencies)**:
+```sh
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Automatically prepend the JIRA issue-key to the commit message
+readonly COMMIT_MESSAGE_PATH="$1"
+readonly COMMIT_TYPE="$2"
+
+# Get current branch name, handling various git states
+GIT_BRANCH=$(git branch --show-current || git rev-parse --abbrev-ref HEAD)
+if [ -z "$GIT_BRANCH" ]; then
+  REV_PARSE_PATH=$(git rev-parse --git-path rebase-merge)
+  if test -d "${REV_PARSE_PATH}"; then
+    REVISION=$(cat "${REV_PARSE_PATH}"/head-name)
+    GIT_BRANCH=${REVISION##refs/heads/}
+  fi
+fi
+
+# Don't proceed if branch name can't be determined
+if [ -z "$GIT_BRANCH" ]; then
+  echo "$(tput setaf 1)error$(tput sgr0) No branch found"
+  exit 1
+fi
+
+# Skip for merge commits
+if [ "$COMMIT_TYPE" = "commit" ] || [ "$COMMIT_TYPE" = "merge" ]; then
+  exit
+fi
+
+# Extract JIRA issue key from branch name (format: PROJECT-123)
+ISSUE_KEY=$(node -e 'console.log(process.argv.pop().split("/").reduce(((e,o)=>(o=/^[A-Z]{2,}-\d+/.exec(o)?.pop())?o:e),""));' "${GIT_BRANCH}")
+
+# Skip if no issue key found
+if [ -z "$ISSUE_KEY" ]; then
+  echo "$(tput setaf 3)warning$(tput sgr0) No issue key found in branch '${GIT_BRANCH}'"
+  exit
+fi
+
+# Skip if message already contains the issue key
+if grep -q "^${ISSUE_KEY}\b" "$COMMIT_MESSAGE_PATH"; then
+  exit
+fi
+
+# Prepend issue key to commit message
+sed -i -e "1s/^/${ISSUE_KEY}: /" "$COMMIT_MESSAGE_PATH"
+```
+
+**Installation Steps**:
+
+For Commitizen:
+```bash
+# Install Commitizen
+pnpm add -D commitizen cz-conventional-changelog
+
+# Configure in package.json
+# {
+#   "config": {
+#     "commitizen": {
+#       "path": "cz-conventional-changelog"
+#     }
+#   }
+# }
+
+# Add the prepare-commit-msg hook
+pnpm exec husky add .husky/prepare-commit-msg "$(cat << 'EOF'
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+if [ "$2" != "message" ] && [ "$2" != "merge" ]; then 
+  exec < /dev/tty && $(pnpm bin)/cz --hook "$1" "$2" "$3" || true
+fi
+EOF
+)"
+```
+
+For JIRA integration:
+```bash
+# Option 1: Use jira-prepare-commit-msg package
+pnpm add -D jira-prepare-commit-msg
+
+# Add the prepare-commit-msg hook
+pnpm exec husky add .husky/prepare-commit-msg "$(pnpm bin)/jira-prepare-commit-msg \$1"
+
+# Option 2: Use the custom script (no dependencies)
+# Copy the advanced script above to .husky/prepare-commit-msg
+```
+
+These hooks ensure:
+- Standardized commit messages following conventional commits (with Commitizen)
+- Automatic JIRA issue key detection from branch names
+- Proper prefixing of commit messages with issue keys
+- Graceful handling of edge cases like merge commits and branches without issue keys
 
 ### Syntax & Programming Style
 
@@ -227,11 +651,253 @@ src/
 - Use colorized output for warnings/errors.
 - Use explicit exit codes for error conditions.
 
+### Package Manager Selection
+
+- **Prefer pnpm** over npm or Yarn for all projects when possible:
+  - Superior disk space efficiency with content-addressable storage
+  - Strict dependency resolution that prevents phantom dependencies
+  - Built-in monorepo support with workspaces
+  - Faster installation times
+  - Most secure dependency resolution
+
+- **Alternatively, use Bun** for projects needing maximum performance:
+  - Extremely fast package installation
+  - Built-in test runner and bundler
+  - Native TypeScript support
+  - Compatible with most npm packages
+
+- **Setup for pnpm**:
+  ```json
+  // package.json
+  {
+    "packageManager": "pnpm@8.15.4"
+  }
+  ```
+  
+- **Lockfile guidance**:
+  - Commit `pnpm-lock.yaml` or `bun.lockb` to version control
+  - Never modify lockfiles manually
+  - Update dependencies with `pnpm update` or appropriate commands
+  - Run `pnpm install --frozen-lockfile` in CI environments
+
+- **For existing projects**:
+  - Do not switch package managers mid-project without full team agreement
+  - When switching, delete the old lockfile and `node_modules` completely
+
 ### Node.js setup
 
-- Ensure `.nvmrc` matches the Node.js version in use.
-- In `package.json`, ensure `packageManager` matches the codebase's package manager, and `engines.node` matches `.nvmrc`.
-- Ensure `@types/node` is installed and matches the same Node.js version.
+#### Initial Setup
+
+- **When initializing a new repository**, use LTS Node and create .nvmrc:
+  ```bash
+  # Switch to LTS version
+  nvm use --lts
+  
+  # Create .nvmrc with current Node version
+  node -v > .nvmrc
+  ```
+
+- **Always include `.nvmrc`** with the exact Node.js version to ensure consistency across development environments
+
+#### Dynamic Version Management
+
+- **Use `.nvmrc` to drive `package.json` settings** for CI/CD compatibility:
+  ```json
+  // package.json
+  {
+    "engines": {
+      "node": ">=18.0.0",
+      "pnpm": ">=8.0.0"
+    },
+    "packageManager": "pnpm@8"
+  }
+  ```
+
+- For CI/CD pipelines, use dynamic version extraction:
+  ```yaml
+  # GitHub Actions workflow example
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+        - name: Read .nvmrc
+          run: echo "NODE_VERSION=$(cat .nvmrc)" >> $GITHUB_ENV
+        - uses: actions/setup-node@v4
+          with:
+            node-version: ${{ env.NODE_VERSION }}
+            cache: 'pnpm'
+        - run: corepack enable
+        - run: pnpm install --frozen-lockfile
+  ```
+
+- **Enforce Node.js version usage** in development with:
+  ```bash
+  pnpm exec check-node-version --package
+  ```
+
+- **When checking out a new codebase**, immediately look for and if necessary add:
+  - `.nvmrc` for Node.js version management
+  - `"packageManager"` field in package.json
+  - Proper lockfile for the selected package manager
+
+- Ensure `@types/node` is installed and matches the same Node.js version
+
+### Monorepo Configuration
+
+- Use **Turborepo** for monorepo workspaces that need advanced build optimizations:
+  ```json
+  // turbo.json
+  {
+    "$schema": "https://turbo.build/schema.json",
+    "globalDependencies": ["tsconfig.json"],
+    "pipeline": {
+      "build": {
+        "dependsOn": ["^build"],
+        "outputs": [".next/**", "dist/**"]
+      },
+      "lint": {},
+      "dev": {
+        "cache": false,
+        "persistent": true
+      },
+      "generate": {
+        "dependsOn": [],
+        "outputs": ["src/generated/**"]
+      }
+    }
+  }
+  ```
+
+- For simpler monorepos, pnpm workspaces may be sufficient:
+  ```json
+  // pnpm-workspace.yaml
+  packages:
+    - 'apps/*'
+    - 'packages/*'
+  ```
+
+- Configure shared dependencies carefully:
+  - Use `"*"` for internal workspace packages
+  - Pin exact versions for external packages in root
+  - Consider `pnpm.overrides` for enforcing specific versions
+
+### Code Generation
+
+Prioritize automated code generation for schema-driven development. Include a `generate` script in package.json and run it as part of the build process.
+
+#### Core Generation Tools
+
+- **GraphQL Schema**: Use graphql-codegen for type-safe operations
+  ```json
+  {
+    "scripts": {
+      "generate": "graphql-codegen"
+    }
+  }
+  ```
+
+- **OpenAPI/Swagger**: Generate client-side types and API methods
+  ```json
+  {
+    "scripts": {
+      "generate": "openapi-codegen gen admin"
+    }
+  }
+  ```
+
+- **SVG Icons**: Transform SVGs into React components
+  ```json
+  {
+    "scripts": {
+      "generate": "svgr --icon --jsx-runtime automatic --out-dir src/generated/icons --ref --typescript -- icons"
+    }
+  }
+  ```
+
+- **CMS Integration**: Generate types from CMS schemas
+  ```json
+  {
+    "scripts": {
+      "generate": "sanity-codegen"
+    }
+  }
+  ```
+
+- **Blockchain/Custom APIs**: Use specialized generators
+  ```json
+  {
+    "scripts": {
+      "generate": "source .env; docker run -v .:/usr/app \"${CLI_IMAGE}\" chr generate-client-stubs --typescript"
+    }
+  }
+  ```
+
+#### Configuration Best Practices
+
+- **Standardize Output Location**: Place all generated code in `src/generated/`
+- **Gitignore Generated Files**: Add generated directories to `.gitignore` when appropriate
+- **Version Config Files**: Always commit generator config files (e.g., `codegen.ts`)
+- **Pre-Commit Hooks**: Run generators in pre-commit hooks or CI to ensure types stay current
+- **Monorepo Setup**: Use Turborepo to orchestrate generation across workspaces
+  ```json
+  {
+    "scripts": {
+      "generate": "turbo run generate"
+    }
+  }
+  ```
+
+#### Generation Workflow
+
+1. Define schemas/APIs first (contract-first development)
+2. Configure generators to create type-safe interfaces
+3. Implement features using the generated types
+4. Run generation on schema changes
+5. Validate generated output is type-compatible with existing code
+
+#### Key Tools Configuration
+
+- **GraphQL Codegen**:
+  ```typescript
+  // codegen.ts
+  export default {
+    schema: "schema.graphql",
+    documents: ["src/**/*.graphql"],
+    generates: {
+      "src/generated/graphql.ts": {
+        plugins: ["typescript", "typescript-operations", "typescript-react-query"],
+        config: {
+          fetcher: "@/lib/graphql-fetcher#fetchData",
+          enumsAsTypes: true
+        }
+      }
+    }
+  };
+  ```
+
+- **OpenAPI Codegen**:
+  ```typescript
+  // openapi-codegen.config.ts
+  import { defineConfig } from "@openapi-codegen/cli";
+  import { generateSchemaTypes, generateReactQueryComponents } from "@openapi-codegen/typescript";
+  
+  export default defineConfig({
+    admin: {
+      from: { source: "url", url: "https://api.example.com/schema.json" },
+      outputDir: "src/generated/admin",
+      to: async (context) => {
+        const filenamePrefix = "adminApi";
+        const clients = await generateReactQueryComponents(context, {
+          filenamePrefix,
+          clientName: "AdminApi"
+        });
+        const schemas = await generateSchemaTypes(context, { filenamePrefix });
+        return [...clients, ...schemas];
+      }
+    }
+  });
+  ```
 
 ### `package.json` Scripts
 
@@ -260,6 +926,283 @@ Example snippet to add if missing:
 }
 ```
 
+### Spell Checking Configuration
+
+Always include a `cspell.json` file in the project root to ensure consistent spell checking across the team and in CI/CD pipelines.
+
+```json
+// cspell.json
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en",
+  "useGitignore": true,
+  "allowCompoundWords": true,
+  "ignorePaths": [
+    // Dependencies
+    "node_modules",
+    // Build outputs
+    "dist",
+    ".next",
+    "build",
+    // Generated files
+    "src/generated/**",
+    "**/generated/**",
+    // Large binary or lock files
+    "pnpm-lock.yaml",
+    "yarn.lock",
+    "package-lock.json",
+    "bun.lockb",
+    "*.min.*",
+    "*.mp4",
+    "*.webm",
+    "*.glb",
+    // Environment and configuration
+    ".env",
+    ".env.*",
+    // Test files (customize as needed)
+    "*.test.*",
+    "*.spec.*",
+    "*.cy.*",
+    "*.stories.*",
+    "**/__fixtures__",
+    "**/cypress",
+    "**/fixtures",
+    "**/test-data"
+  ],
+  "ignoreRegExpList": [
+    // Escape sequences
+    "\\\\(.*\\\\)",
+    // Comments
+    "\\/\\*[\\s\\S]*?\\*\\/",
+    // Template literals
+    "\\{\\{[\\s\\S]*?\\}\\}",
+    // Possessives
+    "//'s+",
+    // File extensions
+    "\\w+\\.\\w+",
+    // Import statements
+    "import\\s+.+?\\s+from\\s+'.*'",
+    // Hash patterns and long identifiers
+    "[a-f\\d]{32,}",
+    // Data URIs
+    "data:([a-z]+/[a-z0-9-+.]+);base64,([A-Za-z0-9+/=])"
+  ],
+  "words": [
+    // Package managers & build tools
+    "pnpm",
+    "lerna",
+    "turborepo",
+    "vite",
+    "tsup",
+    "esbuild",
+    "rollup",
+    "npmrc",
+    "nvmrc",
+    
+    // Frameworks & libraries
+    "nextjs",
+    "preact",
+    "svelte",
+    "astro",
+    "qwik",
+    "fastify",
+    "nestjs",
+    "trpc",
+    "tanstack",
+    "zustand",
+    "xstate",
+    "jotai",
+    "valtio",
+    "immer",
+    "zod",
+    "viem",
+    "wagmi",
+    "ethers",
+    "gsap",
+    "framer",
+    "shadcn",
+    "tailwindcss",
+    
+    // UI libraries & components
+    "lucide",
+    "heroicons",
+    "radix",
+    "mantine",
+    "chakra",
+    "headlessui",
+    "vaul",
+    "sonner",
+    "contentful",
+    "storybook",
+    "nextui",
+    "swiper",
+    "clsx",
+    "clsxm",
+    "cva",
+    "cmdk",
+    
+    // Testing & tooling
+    "vitest",
+    "uvu",
+    "jest",
+    "cypress",
+    "testid",
+    "lcov",
+    "codecov",
+    "typecheck",
+    "tsbuildinfo",
+    "codemod",
+    "svgr",
+    "rehype",
+    "shiki",
+    
+    // Web3 & blockchain
+    "secp256k1",
+    "merkle",
+    "chromia",
+    "rell",
+    "brid",
+    "brids",
+    "dapp",
+    "dapps",
+    "promievent",
+    "gtxclient",
+    "secp",
+    "ierc",
+    "dalarnia",
+    "hbridge",
+    
+    // File formats & data
+    "webp",
+    "avif",
+    "webm",
+    "jsonld",
+    "superjson",
+    "toml",
+    "yaml",
+    "graphql",
+    "openapi",
+    "camelcase",
+    "kebabcase",
+    "dataurl",
+    
+    // Auth & identity
+    "supabase",
+    "oauth",
+    "oidc",
+    "jwks",
+    "cognito",
+    "signin",
+    "signup",
+    "signout",
+    "onboarded",
+    
+    // Payment providers
+    "klarna",
+    "vipps",
+    "stripe",
+    "paypal",
+    "gtin13",
+    
+    // Analytics & tracking
+    "gtag",
+    "matomo",
+    "plausible",
+    "mixpanel",
+    "metrica",
+    "ganalytics",
+    
+    // Deployment & hosting
+    "vercel",
+    "netlify",
+    "cloudflare",
+    "amazonaws",
+    "digitalocean",
+    "heroku",
+    
+    // Development patterns
+    "memoize",
+    "debounce",
+    "throttle",
+    "middleware",
+    "middlewares",
+    "codegen",
+    "codebase",
+    "monorepo",
+    "vendored",
+    "treeshake",
+    "transpile",
+    "polyfill",
+    "esbuild"
+  ],
+  "overrides": [
+    {
+      "filename": "**/locales/sv/**/*.json",
+      "language": "en,sv" 
+    },
+    {
+      "filename": "**/locales/de/**/*.json",
+      "language": "en,de"
+    }
+  ],
+  "import": []
+}
+```
+
+#### Key Configuration Features
+
+- **Comprehensive Technical Dictionary**: Over 100 commonly used technical terms pre-approved and categorized by domain
+- **Multi-Language Support**: Configuration for projects with internationalization (Swedish, German, etc.)
+- **Smart Ignores**:
+  - Generated code (all common output directories)
+  - Build artifacts and bundle files
+  - Environment and configuration files
+  - Test fixtures and mock data
+  - Binary and media files
+  - Lock files from all package managers
+
+- **RegExp Pattern Ignores**: Common code patterns that frequently trigger false positives:
+  - Import statements
+  - File paths with extensions
+  - Long hashes and cryptographic identifiers
+  - Base64 data URIs
+  - Template literals
+  - Code comments with non-dictionary terms
+
+- **Optimized for Modern Workflows**:
+  - Blockchain/Web3 terminology
+  - Frontend frameworks and libraries
+  - Testing and tooling identifiers
+  - Payment providers
+  - Authentication systems
+
+#### Implementation
+
+1. Place `cspell.json` in the project root directory
+2. Configure the spell checking script in package.json:
+   ```json
+   "scripts": {
+     "spellcheck": "cspell --config=cspell.json \"**/*.{ts,tsx,js,jsx,md,mdx}\" --no-progress"
+   }
+   ```
+3. Add to pre-commit hooks or CI pipeline
+4. Extend with domain-specific terms as needed
+
+For projects with non-English content or documentation, add the appropriate language dictionaries:
+
+```bash
+pnpm add -D @cspell/dict-sv @cspell/dict-de-de
+```
+
+Then update the imports section of cspell.json:
+```json
+"import": [
+  "@cspell/dict-sv/cspell-ext.json",
+  "@cspell/dict-de-de/cspell-ext.json"
+]
+```
+
 ### `tsconfig.json`
 
 - Use `@tsconfig/strictest`.
@@ -282,6 +1225,113 @@ Example snippet to add if missing:
   "exclude": ["node_modules"]
 }
 ```
+
+### ESLint Configuration
+
+Use ESLint's new flat config format with the following plugins and configurations. This setup enforces code quality, React best practices, and TypeScript correctness.
+
+#### Essential Plugins
+
+```bash
+# Core and TypeScript
+npm install -D eslint @eslint/js typescript-eslint @typescript-eslint/parser
+
+# React and Next.js
+npm install -D eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-react-refresh @next/eslint-plugin-next
+
+# Import management
+npm install -D eslint-plugin-import-x eslint-plugin-simple-import-sort eslint-plugin-unused-imports
+
+# Other quality tools
+npm install -D eslint-plugin-promise @tanstack/eslint-plugin-query eslint-plugin-react-compiler
+```
+
+#### Configuration Structure (`eslint.config.js`)
+
+Use ESLint's flat config format with modular configuration:
+
+```js
+// eslint.config.js
+import js from "@eslint/js";
+import nextPlugin from "@next/eslint-plugin-next";
+import pluginQuery from "@tanstack/eslint-plugin-query";
+import tsParser from "@typescript-eslint/parser";
+import eslintPluginImportX from "eslint-plugin-import-x";
+import pluginPromise from "eslint-plugin-promise";
+import react from "eslint-plugin-react";
+import reactCompiler from "eslint-plugin-react-compiler";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import simpleImportSort from "eslint-plugin-simple-import-sort";
+import unusedImports from "eslint-plugin-unused-imports";
+import globals from "globals";
+import { config as tsEslintConfig, configs as tsEslintConfigs } from "typescript-eslint";
+
+// Config implementation
+export default tsEslintConfig(
+  // Base configurations
+  // TypeScript configurations 
+  // Plugin configurations
+  // File-specific overrides
+);
+```
+
+#### Plugin Purposes
+
+- **TypeScript Integration**: 
+  - `typescript-eslint` - Strict type checking rules
+  - `@typescript-eslint/parser` - Enables ESLint to understand TypeScript
+
+- **React Best Practices**:
+  - `eslint-plugin-react` - Core React patterns (component definition, prop naming)
+  - `eslint-plugin-react-hooks` - Enforces Rules of Hooks
+  - `eslint-plugin-react-refresh` - Optimizes for Fast Refresh compatibility
+  - `eslint-plugin-react-compiler` - Ensures compatibility with React Compiler (Forget)
+
+- **Import Management**:
+  - `eslint-plugin-import-x` - Import validation and restrictions
+  - `eslint-plugin-simple-import-sort` - Consistent import ordering
+  - `eslint-plugin-unused-imports` - Automatic removal of unused imports
+
+- **Framework Specific**:
+  - `@next/eslint-plugin-next` - Next.js best practices and patterns
+  - `@tanstack/eslint-plugin-query` - TanStack Query optimization rules
+
+- **Code Quality**:
+  - `eslint-plugin-promise` - Promise handling best practices
+
+#### Key Rule Configurations
+
+- **TypeScript Strictness**:
+  - Enforced nullish coalescing over logical OR
+  - Consistent type definitions (`type` over `interface`)
+  - Proper type imports
+
+- **React Patterns**:
+  - Boolean prop naming convention (`isX`, `hasX`, `showX`)
+  - Self-closing component enforcement
+  - JSX prop sorting
+  - Component definition style consistency
+  - Prevention of unstable nested components
+
+- **Import Organization**:
+  - Grouping imports by source type (React, Next.js, node_modules, local)
+  - Automatic removal of unused imports
+  - Type import separation
+
+- **Framework Conventions**:
+  - Exceptions for Next.js page components
+  - Special rules for UI component libraries
+  - Prevention of direct Radix UI imports outside UI components
+
+#### Implementation Notes
+
+- Use `"react/boolean-prop-naming"` to enforce consistent boolean prop names
+- Configure `"react/jsx-sort-props"` for consistent prop ordering
+- Implement `"simple-import-sort/imports"` with custom grouping
+- Use file overrides to exempt certain files from specific rules
+- Enable React compiler checks for better performance
+- Add specialized rules for UI components directory
 
 ## Technology-Specific Standards
 
@@ -568,6 +1618,35 @@ When backend schemas evolve:
 - Configure `QueryCache`/`MutationCache` centrally (with Sentry if needed).
 - Give hooks descriptive names like `useGetMemeCoinPriceQuery`.
 - Match `queryKey` to your named operation plus arguments (e.g., `["get_meme_coin_price", tokenId]`).
+
+#### Cache Invalidation on Authentication State Changes
+
+Implement global query cache invalidation on login/logout to maintain data isolation between user sessions:
+
+```tsx
+const useAuth = () => {
+  const authStore = useAuthStore();
+  const queryClient = useQueryClient();
+
+  return {
+    ...authStore,
+    setAuth: (auth: AuthState) => {
+      authStore.setAuth(auth);
+      // Clear cache on successful authentication
+      if (auth.isAuthenticated) {
+        void queryClient.invalidateQueries();
+      }
+    },
+    logout: () => {
+      // Clear cache before session termination
+      void queryClient.invalidateQueries();
+      authStore.logout();
+    },
+  };
+};
+```
+
+This comprehensive cache invalidation strategy is more robust than adding user-specific identifiers to individual query keys. It guarantees complete cache purging during authentication state transitions, eliminating the risk of data leakage between sessions. While an alternative approach would be incorporating session identifiers into all query keys, such implementation would require perfect consistency across the codebase. The global invalidation pattern provides stronger security guarantees with minimal performance impact, as the subsequent requests would be necessary regardless when changing users.
 
 #### React Query Pattern Implementation
 
