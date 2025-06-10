@@ -12,6 +12,7 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - **react-hook-form** for all form handling.
 - **Zustand** for non-context or persistent client-side state.
 - **@ebay/nice-modal-react** for modals.
+- **@tanstack/react-table** for data tables and complex data presentation.
 
 **AVOID**:
 
@@ -179,16 +180,19 @@ src/
 
 - Remove unused exports regularly.
 - Export next to declarations; avoid placing all exports at the file bottom.
-- Avoid default exports (except in Next.js pages).
+- Avoid default exports (except for Next.js page components, layout components, and error/loading/not-found pages in App Router).
 - Import with short paths (e.g., `@/components/ui`) and prefer `@/*` from the project root.
 - Keep import paths as concise as possible.
 
 ### Static Export Considerations
 
-- When building for static export, avoid server components, middleware, and other server-side features.
+**Only apply these rules when using Next.js static export (`output: "export"`):**
+
+- Convert server components to client components when they need interactivity or client-side data fetching.
+- Avoid server-side features: middleware, API routes, server actions, ISR, SSR.
 - Use query parameters instead of dynamic routes for data filtering and selection.
-- All dynamic data must be fetched client-side after route hydration.
-- Ensure all components work properly in a static export environment.
+- All dynamic data must be fetched client-side after route hydration using react-query.
+- Ensure all components handle client-side-only rendering (avoid dependencies on server-side rendering lifecycle).
 - Use `next.config.ts` to configure static export settings properly.
 
 ### Next.js Deployment Configuration
@@ -196,11 +200,11 @@ src/
 - **Always set `basePath` when deploying to non-root paths**:
   ```typescript
   // For production environments with subpath deployment
-  export const basePath = 
-    process.env.NODE_ENV === "production" 
-      ? `/your_app_path/${process.env.DEPLOYMENT_ID}/static` 
+  export const basePath =
+    process.env.NODE_ENV === "production"
+      ? `/your_app_path/${process.env.DEPLOYMENT_ID}/static`
       : "";
-  
+
   const nextConfig: NextConfig = {
     basePath,
     // other config...
@@ -359,9 +363,9 @@ src/
 
 ### Pre-commit Hooks with Husky
 
-Set up Husky to run type checking and formatting before each commit:
+For projects requiring automated code quality checks, set up Husky:
 
-#### Installation and Setup
+#### Basic Setup
 
 ```bash
 # Install Husky and pretty-quick for formatting
@@ -371,27 +375,19 @@ pnpm add -D husky pretty-quick
 pnpm exec husky init
 ```
 
-#### Configuration with pnpm
+#### Pre-commit Hook
 
 ```sh
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Run type checking first to catch type errors
-pnpm run typecheck
-
-# Run formatting on staged files
+# Format staged files
 $(pnpm bin)/pretty-quick --staged
 ```
 
-This setup ensures that:
-- TypeScript type checking runs first to catch type errors
-- Code formatting is automatically applied to staged files
-- Commands use pnpm for optimal performance and reliability
+#### Pre-push Hook
 
-#### Pre-push Hooks
-
-For more rigorous checks before pushing to the remote repository, add a pre-push hook:
+For type checking before pushing to the remote repository:
 
 ```bash
 # Create a pre-push hook
@@ -404,15 +400,7 @@ pnpm exec husky add .husky/pre-push "pnpm run typecheck"
 
 # Run full type checking
 pnpm run typecheck
-
-# Optionally check formatting on files changed since main branch
-git diff "origin/main" --diff-filter=ACM --name-only -z | xargs -0 $(pnpm bin)/prettier --ignore-unknown --check
 ```
-
-The pre-push hook adds an extra layer of validation:
-- Runs complete type checking across the entire codebase
-- Verifies formatting on all files changed since the main branch
-- Can be temporarily disabled with `git push --no-verify` when needed
 
 #### Prepare Commit Message Hooks
 
@@ -495,35 +483,24 @@ These hooks ensure:
 
 ### Syntax & Programming Style
 
-- **Always use strict mode** in all JavaScript and TypeScript files:
-  ```javascript
-  'use strict';  // For JavaScript files
-  ```
-  
+- **Use strict mode** for production applications:
+
   ```typescript
-  // TypeScript strictness is enforced through tsconfig.json
+  // TypeScript strictness through tsconfig.json
   {
     "compilerOptions": {
       "strict": true,
-      "noImplicitAny": true,
-      "strictNullChecks": true,
-      "strictFunctionTypes": true,
-      "strictBindCallApply": true,
-      "strictPropertyInitialization": true,
-      "noImplicitThis": true,
-      "useUnknownInCatchVariables": true,
-      "alwaysStrict": true,
-      // Additional strict flags
+      // Optional additional strict flags for mature projects
       "noUncheckedIndexedAccess": true,
       "exactOptionalPropertyTypes": true
     }
   }
   ```
-  
+
   ```jsx
-  // For React, use the Strict Mode component
+  // For React, use Strict Mode in development
   import { StrictMode } from 'react';
-  
+
   function App() {
     return (
       <StrictMode>
@@ -559,11 +536,11 @@ These hooks ensure:
   - Faster installation times
   - Most secure dependency resolution
 
-- **Alternatively, use Bun** for projects needing maximum performance:
-  - Extremely fast package installation
+- **Alternatively, use Bun** for projects where you can accept ecosystem trade-offs for performance:
+  - Extremely fast package installation and runtime
   - Built-in test runner and bundler
   - Native TypeScript support
-  - Compatible with most npm packages
+  - Growing npm package compatibility (verify critical dependencies work before adopting)
 
 - **Setup for pnpm**:
   ```json
@@ -572,7 +549,7 @@ These hooks ensure:
     "packageManager": "pnpm@8.15.4"
   }
   ```
-  
+
 - **Lockfile guidance**:
   - Commit `pnpm-lock.yaml` or `bun.lockb` to version control
   - Never modify lockfiles manually
@@ -591,7 +568,7 @@ These hooks ensure:
   ```bash
   # Switch to LTS version
   nvm use --lts
-  
+
   # Create .nvmrc with current Node version
   node -v > .nvmrc
   ```
@@ -644,7 +621,7 @@ These hooks ensure:
 
 ### Monorepo Configuration
 
-- Use **Turborepo** for monorepo workspaces that need advanced build optimizations:
+- Use **Turborepo** for monorepo workspaces that need advanced build optimizations and caching:
   ```json
   // turbo.json
   {
@@ -668,7 +645,7 @@ These hooks ensure:
   }
   ```
 
-- For simpler monorepos, pnpm workspaces may be sufficient:
+- **For simpler monorepos** without complex build dependencies, pnpm workspaces may be sufficient:
   ```json
   // pnpm-workspace.yaml
   packages:
@@ -683,7 +660,21 @@ These hooks ensure:
 
 ### Code Generation
 
-Prioritize automated code generation for schema-driven development. Include a `generate` script in package.json and run it as part of the build process.
+Use automated code generation for schema-driven development when it provides clear benefits. Include a `generate` script in package.json for manual execution when schemas change.
+
+#### When to Use Code Generation
+
+- **Complex schemas** with frequent changes (GraphQL, OpenAPI)
+- **Large icon sets** that need React component conversion
+- **CMS integration** requiring type safety
+- **API clients** with many endpoints
+
+#### When NOT to Use Code Generation
+
+- **Simple, stable APIs** with few endpoints
+- **Small projects** where manual type definitions are manageable
+- **One-off integrations** that won't change frequently
+- **When debugging generated code** becomes more complex than writing it manually
 
 #### Core Generation Tools
 
@@ -696,7 +687,16 @@ Prioritize automated code generation for schema-driven development. Include a `g
   }
   ```
 
-- **OpenAPI/Swagger**: Generate client-side types and API methods
+- **OpenAPI/Swagger**: Generate Zod schemas and types from OpenAPI specs
+  ```json
+  {
+    "scripts": {
+      "generate": "openapi-zod-client https://api.example.com/swagger.json --strict-objects --output src/generated/schemas/api.ts"
+    }
+  }
+  ```
+  
+  Alternative: For complex API clients with React Query integration:
   ```json
   {
     "scripts": {
@@ -709,7 +709,7 @@ Prioritize automated code generation for schema-driven development. Include a `g
   ```json
   {
     "scripts": {
-      "generate": "svgr --icon --jsx-runtime automatic --out-dir src/generated/icons --ref --typescript -- icons"
+      "generate": "svgr --filename-case kebab --icon --jsx-runtime automatic --out-dir src/generated/icons --no-prettier --ref --typescript -- src/assets/icons"
     }
   }
   ```
@@ -735,9 +735,11 @@ Prioritize automated code generation for schema-driven development. Include a `g
 #### Configuration Best Practices
 
 - **Standardize Output Location**: Place all generated code in `src/generated/`
-- **Gitignore Generated Files**: Add generated directories to `.gitignore` when appropriate
-- **Version Config Files**: Always commit generator config files (e.g., `codegen.ts`)
-- **Pre-Commit Hooks**: Run generators in pre-commit hooks or CI to ensure types stay current
+- **Version Control Strategy**:
+  - **Commit generated files** for stable, infrequently changing schemas
+  - **Gitignore generated files** for rapidly changing schemas (run generation in CI)
+- **Always commit generator config files** (e.g., `codegen.ts`)
+- **Document regeneration process** in project README
 - **Monorepo Setup**: Use Turborepo to orchestrate generation across workspaces
   ```json
   {
@@ -780,7 +782,7 @@ Prioritize automated code generation for schema-driven development. Include a `g
   // openapi-codegen.config.ts
   import { defineConfig } from "@openapi-codegen/cli";
   import { generateSchemaTypes, generateReactQueryComponents } from "@openapi-codegen/typescript";
-  
+
   export default defineConfig({
     admin: {
       from: { source: "url", url: "https://api.example.com/schema.json" },
@@ -898,7 +900,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "rollup",
     "npmrc",
     "nvmrc",
-    
+
     // Frameworks & libraries
     "nextjs",
     "preact",
@@ -922,7 +924,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "framer",
     "shadcn",
     "tailwindcss",
-    
+
     // UI libraries & components
     "lucide",
     "heroicons",
@@ -940,7 +942,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "clsxm",
     "cva",
     "cmdk",
-    
+
     // Testing & tooling
     "vitest",
     "uvu",
@@ -955,7 +957,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "svgr",
     "rehype",
     "shiki",
-    
+
     // Web3 & blockchain
     "secp256k1",
     "merkle",
@@ -971,7 +973,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "ierc",
     "dalarnia",
     "hbridge",
-    
+
     // File formats & data
     "webp",
     "avif",
@@ -985,7 +987,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "camelcase",
     "kebabcase",
     "dataurl",
-    
+
     // Auth & identity
     "supabase",
     "oauth",
@@ -996,14 +998,14 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "signup",
     "signout",
     "onboarded",
-    
+
     // Payment providers
     "klarna",
     "vipps",
     "stripe",
     "paypal",
     "gtin13",
-    
+
     // Analytics & tracking
     "gtag",
     "matomo",
@@ -1011,7 +1013,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "mixpanel",
     "metrica",
     "ganalytics",
-    
+
     // Deployment & hosting
     "vercel",
     "netlify",
@@ -1019,7 +1021,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "amazonaws",
     "digitalocean",
     "heroku",
-    
+
     // Development patterns
     "memoize",
     "debounce",
@@ -1038,7 +1040,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
   "overrides": [
     {
       "filename": "**/locales/sv/**/*.json",
-      "language": "en,sv" 
+      "language": "en,sv"
     },
     {
       "filename": "**/locales/de/**/*.json",
@@ -1133,16 +1135,31 @@ Use ESLint's new flat config format with the following plugins and configuration
 
 ```bash
 # Core and TypeScript
-npm install -D eslint @eslint/js typescript-eslint @typescript-eslint/parser
+pnpm install -D eslint @eslint/js typescript-eslint @typescript-eslint/parser
 
-# React and Next.js
-npm install -D eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-react-refresh @next/eslint-plugin-next
+# React
+pnpm install -D eslint-plugin-react eslint-plugin-react-hooks
+```
 
+**Recommended for larger projects:**
+```bash
 # Import management
-npm install -D eslint-plugin-import-x eslint-plugin-simple-import-sort eslint-plugin-unused-imports
+pnpm install -D eslint-plugin-import-x eslint-plugin-simple-import-sort eslint-plugin-unused-imports
 
-# Other quality tools
-npm install -D eslint-plugin-promise @tanstack/eslint-plugin-query eslint-plugin-react-compiler
+# Additional quality tools
+pnpm install -D eslint-plugin-promise
+```
+
+**Project-specific additions:**
+```bash
+# Next.js projects
+pnpm install -D @next/eslint-plugin-next
+
+# Projects using TanStack Query
+pnpm install -D @tanstack/eslint-plugin-query
+
+# Projects targeting React 19+ with compiler
+pnpm install -D eslint-plugin-react-refresh eslint-plugin-react-compiler
 ```
 
 #### Configuration Structure (`eslint.config.js`)
@@ -1169,7 +1186,7 @@ import { config as tsEslintConfig, configs as tsEslintConfigs } from "typescript
 // Config implementation
 export default tsEslintConfig(
   // Base configurations
-  // TypeScript configurations 
+  // TypeScript configurations
   // Plugin configurations
   // File-specific overrides
 );
@@ -1177,7 +1194,7 @@ export default tsEslintConfig(
 
 #### Plugin Purposes
 
-- **TypeScript Integration**: 
+- **TypeScript Integration**:
   - `typescript-eslint` - Strict type checking rules
   - `@typescript-eslint/parser` - Enables ESLint to understand TypeScript
 
@@ -1203,7 +1220,7 @@ export default tsEslintConfig(
 
 - **TypeScript Strictness**:
   - Enforced nullish coalescing over logical OR
-  - Consistent type definitions (`type` over `interface`)
+  - Consistent type definitions per project conventions
   - Proper type imports
 
 - **React Patterns**:
@@ -1239,7 +1256,7 @@ export default tsEslintConfig(
 - Leverage **discriminated unions** for state variations.
 - Use `as const` to preserve literal types.
 - Prefer `satisfies` over `as` for safer type compatibility.
-- Default to `type` for local/complex unions, and `interface` for public or extendable contracts.
+- Use `interface` for object shapes that may be extended; use `type` for unions, primitives, and computed types.
 - Avoid `any`, `as`, and `is`; use `zod` for strict type checks.
 - Employ utility types (`Partial`, `Pick`, `Omit`, etc.).
 - Use the strictest TS config available.
@@ -1296,7 +1313,7 @@ const componentVariants = cva(
 
 - Always use **react-hook-form**.
 - Integrate Zod resolvers for runtime validation.
-- **ALWAYS** use the `useTypedForm` helper function from `@/lib/form` to create type-safe forms:
+- **For complex forms**, use the `useTypedForm` helper function from `@/lib/form` to create type-safe forms:
 
 ```ts
 import { useForm } from "react-hook-form";
@@ -1316,7 +1333,7 @@ export const useTypedForm = <T extends z.ZodType>({
 };
 ```
 
-- **ALWAYS** use the `getTypedFields` helper to create strongly-typed form fields:
+- **For type safety across large forms**, use the `getTypedFields` helper:
 
 ```ts
 export function getTypedFields<T extends z.ZodType>(
@@ -1500,7 +1517,8 @@ When backend schemas evolve:
 
 #### General Best Practices
 
-- **NEVER** place `useQuery` or `useMutation` inside a component. Keep them in module scope.
+- Create custom hooks that wrap `useQuery` or `useMutation` for reusability and consistency.
+- `useQuery` and `useMutation` should typically live in their own custom hooks, not directly inside components.
 - Use `queryKey`/`mutationKey` for precise cache invalidation.
 - Use `select` to transform data for the UI.
 - Invalidate queries when mutations affect cached data.
@@ -1638,9 +1656,9 @@ When encountering CORS (Cross-Origin Resource Sharing) errors, follow this troub
        'Content-Type': 'application/json' // Triggers preflight
      }
    });
-   
+
    // After: Simple request without custom headers
-   axios.post('/api/data', 
+   axios.post('/api/data',
      new URLSearchParams(data), // Convert to form-urlencoded
      {
        headers: {
@@ -1658,7 +1676,7 @@ When encountering CORS (Cross-Origin Resource Sharing) errors, follow this troub
    ```typescript
    // Server-side Express.js example
    import cors from 'cors';
-   
+
    app.use(cors({
      origin: ['https://yourfrontend.com', 'http://localhost:3000'],
      methods: ['GET', 'POST', 'PUT', 'DELETE'],
