@@ -1813,33 +1813,54 @@ When encountering CORS (Cross-Origin Resource Sharing) errors, follow this troub
 - Keep them pure, well-typed, and documented.
 - Use descriptive names and proper error handling.
 
-### Modals with @ebay/nice-modal-react
+### Modals: ShadCN Dialog vs @ebay/nice-modal-react
 
-Use `@ebay/nice-modal-react` for all modal management. Implementation pattern:
+**Decision Framework:** Choose the right modal approach based on your use case:
 
-1. Define a modal component:
+#### When to use ShadCN `Dialog` directly:
+- **Simple, component-local modals** (settings panel, info popup)
+- **Few total modals** in the app (1-3 dialogs)
+- **Tight coupling** with parent component state is acceptable
+- **No need for Promise-style resolution** or return values
+
+#### When to use `@ebay/nice-modal-react`:
+- **Global modal orchestration** needed (5+ different modals)
+- **Imperative modal opening** from anywhere (async functions, mutations, services)
+- **Promise-based resolution** required (confirm dialogs, form results)
+- **Modal stacking** or complex modal workflows
+- **Cross-cutting concerns** like confirmation dialogs used throughout the app
+
+**Recommended Approach: Hybrid Architecture**
+Use ShadCN `Dialog` for visuals, `@ebay/nice-modal-react` for orchestration:
 
 ```tsx
+// Global confirm dialog using both libraries
 import NiceModal, { useModal } from '@ebay/nice-modal-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-export const MyModal = NiceModal.create(({ title, description }: { title: string; description: string }) => {
+export const ConfirmDialog = NiceModal.create(({
+  title,
+  message
+}: {
+  title: string;
+  message: string;
+}) => {
   const modal = useModal();
 
   return (
-    <Dialog
-      open={modal.visible}
-      onOpenChange={(open) => {
-        if (!open) modal.hide();
-      }}
-    >
+    <Dialog open={modal.visible} onOpenChange={(v) => !v && modal.hide()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
+        <p className="text-muted-foreground">{message}</p>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => modal.hide()}>Cancel</Button>
-          <Button onClick={() => modal.resolve(true)}>Confirm</Button>
+          <Button variant="outline" onClick={() => modal.resolve(false)}>
+            Cancel
+          </Button>
+          <Button onClick={() => modal.resolve(true)}>
+            Confirm
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
@@ -1847,39 +1868,31 @@ export const MyModal = NiceModal.create(({ title, description }: { title: string
 });
 ```
 
-2. Create a hook to handle modal state:
-
+**Usage in mutations and async flows:**
 ```tsx
-// src/app/users/use-create-user-modal.tsx
+import { useMutation } from '@tanstack/react-query';
 import NiceModal from '@ebay/nice-modal-react';
-import { MyModal } from '@/components/my-modal';
 
-export function useMyModal() {
-  const showMyModal = async (title: string, description: string) => {
-    const result = await NiceModal.show(MyModal, { title, description });
-    return result as boolean;
-  };
+function useDeleteUser() {
+  return useMutation(async (userId: string) => {
+    const confirmed = await NiceModal.show(ConfirmDialog, {
+      title: "Delete user",
+      message: "Are you sure you want to delete this user? This action cannot be undone.",
+    });
 
-  return { showMyModal };
+    if (!confirmed) return;
+
+    await fetch(`/api/users/${userId}`, { method: "DELETE" });
+  });
 }
 ```
 
-3. Use the modal in a component:
-
-```tsx
-function MyComponent() {
-  const { showMyModal } = useMyModal();
-
-  const handleShowModal = async () => {
-    const confirmed = await showMyModal('Confirm Action', 'Are you sure you want to proceed?');
-    if (confirmed) {
-      // Handle confirmation
-    }
-  };
-
-  return <Button onClick={handleShowModal}>Show Modal</Button>;
-}
-```
+**Key Benefits of Hybrid Approach:**
+- **Consistent theming** through ShadCN components
+- **Global orchestration** through NiceModal lifecycle management
+- **Promise-based API** for clean async flows
+- **No prop drilling** or local state management
+- **Works from anywhere** in the app (hooks, services, mutations)
 
 ### Routing and Navigation
 
