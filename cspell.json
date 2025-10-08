@@ -1,0 +1,222 @@
+{
+  "$schema": "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json",
+  "version": "0.2",
+  "language": "en",
+  "useGitignore": true,
+  "allowCompoundWords": true,
+  "ignorePaths": [
+    // Dependencies
+    "node_modules",
+    // Build outputs
+    "dist",
+    ".next",
+    "build",
+    // Generated files
+    "src/generated/**",
+    "**/generated/**",
+    // Large binary or lock files
+    "pnpm-lock.yaml",
+    "yarn.lock",
+    "package-lock.json",
+    "bun.lockb",
+    "*.min.*",
+    "*.mp4",
+    "*.webm",
+    "*.glb",
+    // Environment and configuration
+    ".env",
+    ".env.*",
+    // Test files (customize as needed)
+    "*.test.*",
+    "*.spec.*",
+    "*.cy.*",
+    "*.stories.*",
+    "**/__fixtures__",
+    "**/cypress",
+    "**/fixtures",
+    "**/test-data"
+  ],
+  "ignoreRegExpList": [
+    // Escape sequences
+    "\\\\(.*\\\\)",
+    // Comments
+    "\\/\\*[\\s\\S]*?\\*\\/",
+    // Template literals
+    "\\{\\{[\\s\\S]*?\\}\\}",
+    // Possessives
+    "//'s+",
+    // File extensions
+    "\\w+\\.\\w+",
+    // Import statements
+    "import\\s+.+?\\s+from\\s+'.*'",
+    // Hash patterns and long identifiers
+    "[a-f\\d]{32,}",
+    // Data URIs
+    "data:([a-z]+/[a-z0-9-+.]+);base64,([A-Za-z0-9+/=])"
+  ],
+  "words": [
+    // Package managers & build tools
+    "pnpm",
+    "lerna",
+    "turborepo",
+    "vite",
+    "tsup",
+    "esbuild",
+    "rollup",
+    "npmrc",
+    "nvmrc",
+
+    // Frameworks & libraries
+    "nextjs",
+    "preact",
+    "svelte",
+    "astro",
+    "qwik",
+    "fastify",
+    "nestjs",
+    "trpc",
+    "tanstack",
+    "zustand",
+    "xstate",
+    "jotai",
+    "valtio",
+    "immer",
+    "zod",
+    "zodios",
+    "viem",
+    "wagmi",
+    "ethers",
+    "gsap",
+    "framer",
+    "shadcn",
+    "tailwindcss",
+
+    // UI libraries & components
+    "lucide",
+    "heroicons",
+    "radix",
+    "mantine",
+    "chakra",
+    "headlessui",
+    "vaul",
+    "sonner",
+    "contentful",
+    "storybook",
+    "nextui",
+    "swiper",
+    "clsx",
+    "clsxm",
+    "cva",
+    "cmdk",
+    "oklch",
+    "WCAG",
+
+    // Testing & tooling
+    "vitest",
+    "uvu",
+    "jest",
+    "cypress",
+    "testid",
+    "lcov",
+    "codecov",
+    "typecheck",
+    "tsbuildinfo",
+    "codemod",
+    "svgr",
+    "rehype",
+    "shiki",
+
+    // Web3 & blockchain
+    "secp256k1",
+    "merkle",
+    "chromia",
+    "rell",
+    "brid",
+    "brids",
+    "dapp",
+    "dapps",
+    "promievent",
+    "gtxclient",
+    "secp",
+    "ierc",
+    "dalarnia",
+    "hbridge",
+
+    // File formats & data
+    "webp",
+    "avif",
+    "webm",
+    "jsonld",
+    "superjson",
+    "toml",
+    "yaml",
+    "graphql",
+    "openapi",
+    "camelcase",
+    "kebabcase",
+    "dataurl",
+
+    // Auth & identity
+    "supabase",
+    "oauth",
+    "oidc",
+    "jwks",
+    "cognito",
+    "signin",
+    "signup",
+    "signout",
+    "onboarded",
+
+    // Payment providers
+    "klarna",
+    "vipps",
+    "stripe",
+    "paypal",
+    "gtin13",
+
+    // Analytics & tracking
+    "gtag",
+    "matomo",
+    "plausible",
+    "mixpanel",
+    "metrica",
+    "ganalytics",
+
+    // Deployment & hosting
+    "vercel",
+    "netlify",
+    "cloudflare",
+    "amazonaws",
+    "digitalocean",
+    "heroku",
+
+    // Development patterns
+    "memoize",
+    "debounce",
+    "throttle",
+    "middleware",
+    "middlewares",
+    "codegen",
+    "codebase",
+    "monorepo",
+    "vendored",
+    "treeshake",
+    "transpile",
+    "polyfill",
+
+    // Terminal utilities
+    "setaf",
+    "tput"
+  ],
+  "overrides": [
+    {
+      "filename": "**/locales/sv/**/*.json",
+      "language": "en,sv"
+    },
+    {
+      "filename": "**/locales/de/**/*.json",
+      "language": "en,de"
+    }
+  ],
+  "import": []
+}

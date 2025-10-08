@@ -1253,6 +1253,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "valtio",
     "immer",
     "zod",
+    "zodios",
     "viem",
     "wagmi",
     "ethers",
@@ -1278,6 +1279,8 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "clsxm",
     "cva",
     "cmdk",
+    "oklch",
+    "WCAG",
 
     // Testing & tooling
     "vitest",
@@ -1371,7 +1374,10 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
     "treeshake",
     "transpile",
     "polyfill",
-    "esbuild"
+
+    // Terminal utilities
+    "setaf",
+    "tput"
   ],
   "overrides": [
     {
