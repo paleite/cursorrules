@@ -232,8 +232,8 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive: "bg-destructive text-white hover:bg-destructive/90",
-        outline: "border bg-background hover:bg-accent",
+        destructive: "bg-destructive hover:bg-destructive/90 text-white",
+        outline: "bg-background hover:bg-accent border",
         ghost: "hover:bg-accent hover:text-accent-foreground",
       },
       size: {
@@ -276,79 +276,26 @@ function Button({
 
 Organize Tailwind classes in this specific order for consistency:
 
-```tsx
-cn(
-  // 1. LAYOUT & DISPLAY
-  "flex flex-col",
-  "grid",
-  "inline-flex",
+> **Note:** The numbered comments below are for documentation purposes only to illustrate the organizational hierarchy. Do not include these comments in your actual component code.
 
-  // 2. POSITIONING
-  "relative absolute fixed",
-  "inset-0 top-0 left-0",
-
-  // 3. SIZE & SPACING
-  "w-full h-9 size-4",
-  "p-4 px-3 py-2",
-  "gap-2 space-x-4",
-
-  // 4. TYPOGRAPHY
-  "text-sm font-medium leading-none",
-  "text-foreground",
-
-  // 5. BACKGROUNDS & BORDERS
-  "bg-background border border-input",
-  "rounded-md shadow-xs",
-
-  // 6. TRANSITIONS & ANIMATIONS
-  "transition-all duration-200",
-  "animate-in fade-in",
-
-  // 7. INTERACTIVE STATES (pseudo-classes)
-  "hover:bg-accent",
-  "focus-visible:ring-2",
-  "active:scale-95",
-  "disabled:opacity-50 disabled:pointer-events-none",
-
-  // 8. DATA ATTRIBUTES
-  "data-[state=open]:animate-in",
-  "data-[variant=destructive]:text-destructive",
-
-  // 9. ARIA STATES
-  "aria-invalid:border-destructive",
-  "aria-disabled:opacity-50",
-
-  // 10. GROUP/PEER MODIFIERS
-  "group-hover:opacity-100",
-  "peer-disabled:opacity-50",
-  "group-data-[state=collapsed]:hidden",
-
-  // 11. CONTAINER QUERIES
-  "@md/field-group:flex-row",
-  "@container/field-group:items-center",
-
-  // 12. RESPONSIVE MODIFIERS
-  "md:flex-row",
-  "lg:px-8",
-
-  // 13. DARK MODE
-  "dark:bg-background",
-  "dark:border-border",
-
-  // 14. CHILD SELECTORS (grouped by selector type)
-  // SVG children
-  "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-
-  // Specific children
-  "[&>button]:rounded-md",
-  "[&_a]:underline [&_a:hover]:text-primary",
-
-  // Pseudo-elements
-  "after:absolute after:inset-0",
-
-  className, // User overrides always last
-);
-```
+1. Layout & display
+2. Positioning
+3. Size & spacing
+4. Typography
+5. Backgrounds & borders
+6. Transitions & animations
+7. Interactive states (pseudo-classes)
+8. Data attributes
+9. ARIA states
+10. Group/peer modifiers
+11. Container queries
+12. Responsive modifiers
+13. Dark mode
+14. Child selectors (grouped by selector type)
+    - SVG children
+    - Specific children
+    - Pseudo-elements
+    - User overrides always last
 
 **Important notes:**
 
@@ -400,7 +347,7 @@ function InputGroup({ className, ...props }) {
     <div
       data-slot="input-group"
       className={cn(
-        "flex items-center border rounded-md",
+        "flex items-center rounded-md border",
 
         // Adjust layout when block-start addon exists
         "has-[>[data-align=block-start]]:flex-col",
@@ -623,7 +570,7 @@ function Input({ className, ...props }) {
     <input
       data-slot="input"
       className={cn(
-        "border rounded-md",
+        "rounded-md border",
 
         // Invalid state
         "aria-invalid:border-destructive",
@@ -775,7 +722,7 @@ function InputGroup({ className, ...props }) {
     <div
       className={cn(
         "group/input-group", // Named group
-        "border rounded-md",
+        "rounded-md border",
         className,
       )}
       {...props}
@@ -817,7 +764,7 @@ function FieldDescription({ className, ...props }) {
   return (
     <p
       className={cn(
-        "text-sm text-muted-foreground",
+        "text-muted-foreground text-sm",
         "peer-[]/field-label:mt-2", // Responds to sibling
         className,
       )}
