@@ -53,6 +53,34 @@ This document provides comprehensive guidance for development with Cursor's Comp
 
 > If the reply cannot include tests, it must explain why and create a `TODO` with owner/date.
 
+## Code Review and Refactoring Protocol
+
+**When a user pastes code for review or refactoring:**
+
+1. **Start with a one-line summary** of what you'll change
+2. **Provide the refactored code** without excessive commentary
+3. **End with key refinements list** showing specific improvements made
+
+**Core refactoring principles:**
+- Rename variables and functions to be more descriptive and context-appropriate
+- Prefer functional components with hooks over class components
+- Always use strict equality (`===`) instead of loose equality (`==`)
+- Ensure hooks return cleanup functions where required
+- Use type arguments over type assertions (e.g., `reduce<Type>` instead of `as Type`)
+- Define stable values outside components when they don't depend on props/state
+- Apply memoization and callbacks for performance where beneficial
+- Ensure dependency arrays are complete and accurate
+- Avoid functions with `is` keyword return types
+- Replace dummy initial values with `null` or `undefined` for clearer intent
+- Validate all external data with Zod schemas
+- Identify and fix edge cases and potential bugs
+- Convert inline styles to Tailwind classes or `class-variance-authority`
+- Point out any undesirable behavior (infinite loops, missing null checks, etc.)
+- Always use named exports unless default exports are required
+- Keep functions under 50 lines, components under 100 lines when possible
+- When renaming exports, keep old names as aliases to prevent breaking changes
+- Use valid Tailwind classes with bracket notation for custom values
+
 ## Core Technical Mandates
 
 **USE**:
@@ -516,7 +544,9 @@ src/
 
 - Remove unused exports regularly.
 - Export next to declarations; avoid placing all exports at the file bottom.
-- Avoid default exports (except for Next.js page components, layout components, and error/loading/not-found pages in App Router).
+- **Always use named exports over default exports**, except where required (Next.js pages, layouts, error/loading/not-found pages).
+- **When renaming exports**, maintain backwards compatibility by keeping the old name as an alias:
+  - Example: `export { BetterNamedComponent as PoorlyNamedComponent };`
 - Import with short paths (e.g., `@/components/ui`) and prefer `@/*` from the project root.
 - Keep import paths as concise as possible.
 
@@ -672,15 +702,22 @@ src/
 - Prioritize **readability** over conciseness.
 - Maintain **consistent naming**.
 - Use **descriptive names** for functions, variables, and booleans (e.g., `isUserAuthenticated()`).
-- Rename identifiers if their purpose changes.
+- Rename identifiers if their purpose changes, and provide context-appropriate names.
 - **When generating new code**:
-  - Prefer **explicit** syntax over shorthand.
+  - Prefer **explicit** syntax over shorthand for JSX props and type alias names.
   - Example: `React.FunctionComponent` instead of `React.FC`, `disabled={true}` instead of just `disabled`.
+  - However, **avoid redundant type annotations** when TypeScript can trivially infer the type.
+  - Example: `const items = ["a", "b"]` is better than `const items: string[] = ["a", "b"]`.
 - Comment and document any workarounds or suboptimal solutions.
 - Break large functions into smaller, testable ones.
+- **Target function length**: Keep functions below 50 lines when possible, React components below 100 lines.
 - Prefer early returns to reduce nesting.
 - Avoid magic numbers; use named constants.
 - Use capital letters for constants.
+- **Always identify edge cases and potential bugs** in code:
+  - Provide examples of inputs that could break the code.
+  - Demonstrate how to make code more robust against edge cases.
+  - Point out undesirable behavior (e.g., infinite loops, missing null checks).
 
 ### Code Formatting
 
@@ -846,6 +883,7 @@ These hooks ensure:
   }
   ```
 
+- **Always use strict equality (`===`)** instead of loose equality (`==`), especially when comparing for `null` and `undefined`.
 - Use nullish coalescing (`??`) over logical OR (`||`) for default values.
 - Prefer immutable programming and pure functions.
 - Use appropriate error types (`TypeError`, `RangeError`, etc.).
@@ -1599,7 +1637,10 @@ export default tsEslintConfig(
 - Use `as const` to preserve literal types.
 - Prefer `satisfies` over `as` for safer type compatibility.
 - **Use `type` by default** for all type definitions; only use `interface` when declaration merging is specifically needed.
+- **Prefer type arguments over type assertions**: Use `array.reduce<TargetType>((acc, cur) => ...)` instead of `array.reduce((acc, cur) => ...) as TargetType`.
 - Avoid `any`, `as`, and `is`; use `zod` for strict type checks.
+- **Avoid type guards with `is` keyword** in function return types; prefer explicit type narrowing.
+- **Use `null` or `undefined` over dummy initial values** when they better communicate intent.
 - Employ utility types (`Partial`, `Pick`, `Omit`, etc.).
 - Use the strictest TS config available.
 
@@ -1608,7 +1649,8 @@ export default tsEslintConfig(
 - **Prefer Tailwind CSS v4** over v3 for all new projects and upgrades.
 - Use `import { cn } from "@/lib/utils";` to merge conditional classes.
 - **Never** build class names with string concatenation.
-- **Avoid inline styles**; rely on Tailwind or `class-variance-authority`.
+- **Avoid inline styles**; rely on Tailwind or `class-variance-authority`. Convert inline styles to Tailwind classes in `className`.
+- **Always use valid Tailwind classes**: For custom values, use bracket notation (e.g., `h-[500vh]` not `h-screen-125`).
 - Extend Tailwind config for design tokens and to avoid "magic numbers."
 - **ALWAYS use ShadCN CSS variables** over regular Tailwind color classes for theming consistency.
 - Use `cva` from `class-variance-authority` to handle component styling variations.
@@ -1710,8 +1752,12 @@ const componentVariants = cva(
 - **Always enable React Strict Mode** for better development experience and future compatibility.
 - For props, define a `[ComponentName]Props` type.
 - Don't inline `children` in the props type; use `PropsWithChildren`.
+- **Prefer functional components with hooks over class components** for cleaner, more maintainable code.
 - **Custom Hooks** should do one job well, with consistent return signatures.
 - Avoid `useEffect` for data fetching or side effects.
+- **Define constants, helper functions, and stable references outside components** when they don't depend on props/state.
+- **Use memoization and callbacks** where they improve performance (`useMemo`, `useCallback`).
+- **Ensure dependency arrays are properly defined** for all hooks that use them.
 - Use `"use client"` directive at the top of all interactive components.
 - Mark all components that use hooks or browser APIs with `"use client"`.
 - Keep components focused on a single responsibility.
@@ -1742,6 +1788,7 @@ function App() {
 ### React Hooks
 
 - For async, **avoid** `useEffect` or `useCallback`; prefer react-query's `useQuery`/`useMutation`.
+- **Always return cleanup functions** where required (e.g., `useEffect` with subscriptions, timers, event listeners).
 
 ### Form Handling
 
