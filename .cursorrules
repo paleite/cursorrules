@@ -14,10 +14,24 @@ This document provides comprehensive guidance for development with Cursor's Comp
 **Project Profile Detection:**
 1. **Check project root for profile indicators:**
    - `nx.json` → Use [Nx Monorepo Profile](#profile-nx-monorepo)
-   - `turbo.json` → Use Turborepo patterns (documented in this file)
+   - `turbo.json` → Use [Turborepo Profile](#profile-turborepo)
    - `next.config.js/ts` → Additional [Next.js Profile](#profile-nextjs) considerations
 
 2. **When in doubt:** Check `package.json` scripts and existing command patterns before generating new commands
+
+## Output Contract (every Composer reply must follow)
+
+1. **Applied Rules** – bullet list of the exact rules/profiles you used (quote them)
+2. **Context** – what exists, what you're changing, risks/assumptions
+3. **Plan** – numbered steps; chunk if big (`Subtask N of M`)
+4. **Patches** – file-by-file diffs or full file drops with paths
+5. **Tests** – unit + component; E2E if user flow touched. Include commands to run
+6. **Usage** – code snippet showing how consumers import/use the change
+7. **Checks** – exact commands: `format`, `lint`, `typecheck`, `test`, and affected Nx/Turbo cmds
+8. **Rollout & Revert** – toggle flags, migration notes, revert steps
+9. **Follow-ups** – tickets/todos that intentionally remain
+
+> If the reply cannot include tests, it must explain why and create a `TODO` with owner/date.
 
 ## Core Technical Mandates
 
@@ -377,12 +391,12 @@ These guidelines detail how to plan, implement, and finalize features while **ch
 
 3. **ShadCN components strategy:**
    ```bash
-   pnpm dlx shadcn@latest add --all
+   pnpm dlx shadcn@latest add <component-name>
    ```
-   - **Recommended approach**: Install all components to give Cursor visibility into available options
-   - This prevents Cursor from reinventing wheels or adding components incorrectly from memory
-   - Ensures version consistency between components and Tailwind setup
-   - Alternative: Install only specific components if bundle size is a major concern
+   - **Default approach:** Install only components you actually use (`shadcn add button dialog toast`)
+   - **For component discovery:** Create a dedicated catalog/storybook app with `shadcn add --all`
+   - **Per-app installation:** Always use `shadcn add <component>` to match each app's Tailwind version
+   - **Bundle size:** Installing specific components prevents unnecessary bloat
 
 4. **Project structure after ShadCN setup:**
    - ShadCN components will be added to `src/components/ui/`
@@ -804,7 +818,7 @@ These hooks ensure:
   ```json
   // package.json
   {
-    "packageManager": "pnpm@8.15.4"
+    "packageManager": "pnpm@latest"
   }
   ```
 
@@ -953,7 +967,7 @@ Use automated code generation for schema-driven development when it provides cle
     }
   }
   ```
-  
+
   Alternative: For complex API clients with React Query integration:
   ```json
   {
@@ -1917,7 +1931,34 @@ This comprehensive cache invalidation strategy is more robust than adding user-s
 
 #### React Query Pattern Implementation
 
-All data operations should use TanStack Query (react-query). Implement API operations following this pattern:
+All data operations should use TanStack Query (react-query). **For v5, always wrap your app in `<Suspense>` and `<ErrorBoundary>`** to handle `useSuspenseQuery`.
+
+**Required App Setup:**
+```tsx
+// app/providers.tsx (or root provider)
+"use client";
+
+import { PropsWithChildren, Suspense } from "react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import * as Sentry from "@sentry/react";
+import { createQueryClient } from "@/lib/query-client";
+
+const queryClient = createQueryClient();
+
+export default function Providers({ children }: PropsWithChildren) {
+  return (
+    <Sentry.ErrorBoundary fallback={<div>Something went wrong.</div>}>
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={<div className="p-6">Loading…</div>}>
+          {children}
+        </Suspense>
+      </QueryClientProvider>
+    </Sentry.ErrorBoundary>
+  );
+}
+```
+
+**API Operations Pattern:**
 
 ```tsx
 // 1. Query implementation
@@ -2127,6 +2168,7 @@ export const ConfirmDialog = NiceModal.create(({
 ```tsx
 import { useMutation } from '@tanstack/react-query';
 import NiceModal from '@ebay/nice-modal-react';
+import { axiosClient } from '@/lib/axios-client';
 
 function useDeleteUser() {
   return useMutation(async (userId: string) => {
@@ -2137,7 +2179,7 @@ function useDeleteUser() {
 
     if (!confirmed) return;
 
-    await fetch(`/api/users/${userId}`, { method: "DELETE" });
+    await axiosClient.delete(`/api/users/${userId}`);
   });
 }
 ```
@@ -2339,6 +2381,42 @@ This approach helps maintain a coherent, type-safe, and maintainable codebase wh
 - **Shared libraries:** Use workspace dependencies (`"@my-org/shared-ui": "*"`)
 - **External deps:** Manage at root level when possible
 - **App-specific deps:** Keep in individual app `package.json` when needed
+
+### Profile: Turborepo {#profile-turborepo}
+
+**When `turbo.json` exists, follow these Turborepo patterns:**
+
+**Task Execution (use Turborepo pipeline):**
+- **Build with dependencies:** `turbo run build --filter=...^...`
+- **Quality gate:** `turbo run format lint typecheck test --cache-dir=.turbo`
+- **Development:** `turbo run dev --filter=my-app`
+- **Affected builds:** `turbo run build --filter=[HEAD^1]`
+
+**Pipeline Configuration:**
+```json
+// turbo.json
+{
+  "pipeline": {
+    "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**"] },
+    "typecheck": { "dependsOn": [] },
+    "lint": { "dependsOn": [] },
+    "test": { "dependsOn": [] },
+    "generate": { "dependsOn": [], "outputs": ["src/generated/**"] }
+  },
+  "globalDependencies": ["tsconfig.json"]
+}
+```
+
+**Key Turborepo Principles:**
+- **Pipeline dependencies:** Use `dependsOn: ["^build"]` for build ordering
+- **Output caching:** Specify outputs for effective caching
+- **Filter syntax:** Use `--filter=package-name` for targeted runs
+- **Global dependencies:** Include files that affect all packages
+
+**Dependencies:**
+- **Workspace packages:** Use `"*"` ranges for internal packages
+- **External deps:** Pin at root level when possible
+- **Generated code:** Include in `.gitignore` but specify outputs in pipeline
 
 ### Profile: Next.js {#profile-nextjs}
 
