@@ -1,6 +1,23 @@
 # .cursorrules
 
+> 📋 **Latest Version:** The most up-to-date version of this .cursorrules file is available at: https://raw.githubusercontent.com/paleite/cursorrules/refs/heads/main/.cursorrules
+
 This document provides comprehensive guidance for development with Cursor's Composer, focusing on best practices for Next.js, React (TypeScript), Tailwind CSS + ShadCN, Zod, and react-query.
+
+## Version Specifications & Project Profiles
+
+**Framework Versions (check project-specific requirements):**
+- **React Query:** v5 (use `queryOptions`, `useSuspenseQuery`, etc.)
+- **Tailwind CSS:** Prefer v4, but v3 acceptable in legacy/large projects
+- **TypeScript:** Use `type` by default; `interface` only when declaration merging needed
+
+**Project Profile Detection:**
+1. **Check project root for profile indicators:**
+   - `nx.json` → Use [Nx Monorepo Profile](#profile-nx-monorepo)
+   - `turbo.json` → Use Turborepo patterns (documented in this file)
+   - `next.config.js/ts` → Additional [Next.js Profile](#profile-nextjs) considerations
+
+2. **When in doubt:** Check `package.json` scripts and existing command patterns before generating new commands
 
 ## Core Technical Mandates
 
@@ -18,7 +35,7 @@ This document provides comprehensive guidance for development with Cursor's Comp
 
 - `useEffect` for data fetching.
 - `fetch()` directly; use a dedicated hook or API client instead.
-- Inline styles; rely on Tailwind classes or `class-variance-authority`.
+- Inline styles; rely on Tailwind classes or `class-variance-authority` (except when required for dynamic CSS variables or features not expressible in classes).
 - Mutating data and `for`-loops; favor immutability and array methods (`map`, `filter`, etc.).
 - String concatenation to build class names; use the `cn()` utility.
 - Default exports (except in Next.js pages).
@@ -45,10 +62,11 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - `tailwind-merge` - Tailwind class merging (via `cn()` utility)
 
 **HTTP & API Integration:**
-- `axios` - HTTP client (instead of fetch)
-- `@zodios/core` + `@zodios/plugins` - Type-safe API client with Zod
+- `axios` - **Primary HTTP client** (always prefer over `fetch()` directly)
+- `@zodios/core` + `@zodios/plugins` - **Use when project has OpenAPI/Swagger** schemas
+  - Zodios uses Axios under the hood for type-safe API clients
   - Use `import type { ZodiosPlugin } from "@zodios/core"` to create custom plugins for auth tokens and request/response interceptors
-- `openapi-zod-client` - Generate Zod schemas from OpenAPI/Swagger
+- `openapi-zod-client` - **Codegen tool that creates APIs using Zodios under the hood** from OpenAPI/Swagger specs
 
 **Environment & Configuration:**
 - `@t3-oss/env-nextjs` (or `@t3-oss/env-*`) - Type-safe environment variables
@@ -88,6 +106,22 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - **Testing:** `eslint-plugin-testing-library` + `eslint-plugin-vitest`
 - **Configuration:** `eslint-config-prettier` + `eslint-import-resolver-typescript`
 
+**Type Consistency Enforcement:**
+```javascript
+// eslint.config.mjs - enforce "type" with narrow override escape hatch
+{
+  files: ["**/*.{ts,tsx}"],
+  rules: {
+    "@typescript-eslint/consistent-type-definitions": ["error", "type"],
+  },
+},
+{
+  // Allow interfaces ONLY where declaration merging is required
+  files: ["**/types/augment-*.d.ts", "**/types/augmentation/**/*.d.ts"],
+  rules: { "@typescript-eslint/consistent-type-definitions": "off" },
+}
+```
+
 **Optional ESLint Plugins (as needed):**
 - `eslint-plugin-storybook` - Storybook specific rules
 - `eslint-plugin-unicorn` - Additional code quality rules
@@ -123,6 +157,100 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - **Testing:** Use Vitest for unit tests, consider Playwright for E2E
 - **TypeScript:** Always use strictest possible configuration
 - **Internationalization:** Set up for SSR compatibility with initial page rendering
+
+## Accessibility & Internationalization Checklists
+
+### Accessibility (A11y) Requirements
+**Dialog/Modal Components:**
+- ✅ Focus trap implemented (focus stays within modal)
+- ✅ Keyboard navigation works (Tab, Shift+Tab, Escape)
+- ✅ Focus returns to trigger element on close
+- ✅ ARIA labels and roles properly set (`role="dialog"`, `aria-labelledby`, `aria-describedby`)
+
+**Interactive Elements:**
+- ✅ Color contrast meets WCAG AA standards (4.5:1 for normal text)
+- ✅ Keyboard navigation for all interactive elements
+- ✅ Focus indicators visible and clear
+- ✅ Screen reader support with proper ARIA attributes
+
+**Forms:**
+- ✅ All form inputs have associated labels
+- ✅ Error messages are descriptive and announced to screen readers
+- ✅ Form validation feedback is accessible
+
+### Internationalization (i18n) Requirements
+**Text Content:**
+- ✅ All user-facing strings go through i18n system (no hardcoded strings)
+- ✅ Use ICU message format for plurals and complex formatting
+- ✅ Dates, numbers, and currencies properly localized
+- ✅ Text direction (RTL/LTR) support when needed
+
+**Implementation:**
+- ✅ Translation keys follow consistent naming convention
+- ✅ Context provided for translators when meaning is ambiguous
+- ✅ Dynamic content (user names, counts, etc.) properly handled in translations
+
+## Testing Policy & Error Handling
+
+### Testing Strategy (Test Pyramid)
+**Target Ratios (guidelines):**
+- **Unit Tests:** 60-70% (Vitest)
+- **Component/Integration Tests:** 25-35% (Testing Library + MSW)
+- **E2E Tests:** 5-10% (Playwright)
+
+**Required in Every LLM Output:**
+1. **Unit tests** for pure logic and utilities
+2. **Component tests** for main behavior using Testing Library
+3. **E2E specs** for critical user flows (when user journeys are affected)
+
+**Commands (Nx projects):**
+- `pnpm nx run-many --target=test --all -- --coverage --reporter=default`
+- `pnpm nx run-many --target=e2e --all`
+
+**Quality Gate:**
+Pull Requests must pass: `pnpm nx format:check && pnpm nx lint && pnpm nx typecheck && pnpm nx test` with zero warnings.
+
+### Error Normalization & Monitoring
+
+**Centralized Error Handling:**
+- **Single error shape:** All errors normalized to `RequestError` class
+- **Boundary validation:** Validate all external data with Zod at trust boundaries
+- **Global handling:** React Query cache handles errors with toast + Sentry reporting
+- **User-friendly messages:** Convert technical errors to user-facing messages
+
+**Implementation Pattern:**
+```typescript
+// Centralized error normalization
+export class RequestError extends Error {
+  constructor({ message, httpStatusCode, code, details, cause }: {
+    message: string;
+    httpStatusCode?: number;
+    code?: string;
+    details?: unknown;
+    cause?: unknown;
+  }) {
+    super(message);
+    this.name = "RequestError";
+    // Set properties and maintain stack
+  }
+}
+
+// Axios interceptor ensures consistent error shape
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => { throw normalizeUnknownError(error); }
+);
+
+// React Query global error handling
+const queryCache = new QueryCache({
+  onError: (error) => {
+    const normalized = normalizeUnknownError(error);
+    const { severity, message } = getUserMessageFromError(normalized);
+    toast[severity](message);
+    reportErrorToSentry(normalized);
+  }
+});
+```
 
 ## Working with Cursor Composer
 
@@ -241,17 +369,20 @@ These guidelines detail how to plan, implement, and finalize features while **ch
    pnpm dlx shadcn@latest init -d
    ```
 
-2. **Prefer Tailwind CSS v4** over v3:
-   - When adding ShadCN to a project, upgrade any existing Tailwind v3 to v4
-   - ShadCN's init command will handle the Tailwind setup with the latest version
+2. **Tailwind CSS version strategy:**
+   - **Prefer v4** for new/small projects
+   - **v3 is acceptable** for large projects or when in monorepo with mixed versions
+   - In monorepos: v4 can be root version with v3 in specific app package.json if needed
+   - Only upgrade v3→v4 in projects that aren't huge or complex
 
-3. **Install all ShadCN components immediately** after initialization:
+3. **ShadCN components strategy:**
    ```bash
    pnpm dlx shadcn@latest add --all
    ```
-   - This command should be run immediately after `shadcn init` in new projects
-   - Run this command any time after ShadCN is added to a project to get all available components
-   - This ensures you have the complete ShadCN component library available
+   - **Recommended approach**: Install all components to give Cursor visibility into available options
+   - This prevents Cursor from reinventing wheels or adding components incorrectly from memory
+   - Ensures version consistency between components and Tailwind setup
+   - Alternative: Install only specific components if bundle size is a major concern
 
 4. **Project structure after ShadCN setup:**
    - ShadCN components will be added to `src/components/ui/`
@@ -1383,7 +1514,7 @@ export default tsEslintConfig(
 - Leverage **discriminated unions** for state variations.
 - Use `as const` to preserve literal types.
 - Prefer `satisfies` over `as` for safer type compatibility.
-- Use `interface` for object shapes that may be extended; use `type` for unions, primitives, and computed types.
+- **Use `type` by default** for all type definitions; only use `interface` when declaration merging is specifically needed.
 - Avoid `any`, `as`, and `is`; use `zod` for strict type checks.
 - Employ utility types (`Partial`, `Pick`, `Omit`, etc.).
 - Use the strictest TS config available.
@@ -2171,3 +2302,68 @@ By combining these **Front-End Coding Best Practices** with the **chunking and i
 - **Finalize** once all chunks align with `.cursorrules`.
 
 This approach helps maintain a coherent, type-safe, and maintainable codebase while systematically leveraging Cursor's capabilities.
+
+---
+
+## Project Profiles
+
+### Profile: Nx Monorepo {#profile-nx-monorepo}
+
+**When `nx.json` exists in project root, follow these Nx-specific patterns:**
+
+**Task Execution (use Nx targets, never direct commands):**
+- **Build:** `pnpm nx run-many --target=build --all`
+- **Type checking:** `pnpm nx run-many --target=typecheck --all`
+- **Linting:** `pnpm nx run-many --target=lint --all -- --max-warnings=0`
+- **Testing:** `pnpm nx run-many --target=test --all -- --coverage --reporter=default`
+- **E2E Testing:** `pnpm nx run-many --target=e2e --all`
+
+**Single Project Commands:**
+- `pnpm nx build my-app`
+- `pnpm nx test my-lib --watch`
+- `pnpm nx lint my-app --fix`
+
+**Key Nx Principles:**
+- **Always use Nx targets** for single source of truth on task definitions
+- **Leverage caching:** Nx automatically caches based on inputs/outputs
+- **Respect workspace boundaries:** Use `@nrwl/nx/enforce-module-boundaries` rules
+- **Follow affected commands:** `pnpm nx affected --target=test` for CI optimization
+
+**Tailwind Version Strategy in Nx:**
+- **Root workspace:** May use Tailwind v4
+- **Individual apps:** Can maintain v3 if needed (document in `/apps/<name>/README.md`)
+- **ShadCN components:** Use `shadcn add <component>` per-app to match that app's Tailwind version
+- **Component discovery:** Maintain a catalog app with `shadcn add --all` for reference, clearly labeled
+
+**Dependencies in Nx:**
+- **Shared libraries:** Use workspace dependencies (`"@my-org/shared-ui": "*"`)
+- **External deps:** Manage at root level when possible
+- **App-specific deps:** Keep in individual app `package.json` when needed
+
+### Profile: Next.js {#profile-nextjs}
+
+**When `next.config.js/ts` exists, apply these Next.js specific considerations:**
+
+**React Strict Mode:**
+```typescript
+const nextConfig = {
+  reactStrictMode: true,
+  // other config...
+};
+```
+
+**Static Export Considerations (only when `output: "export"`):**
+- Convert server components to client components for interactivity
+- Avoid server-side features: middleware, API routes, server actions, ISR, SSR
+- Use query parameters instead of dynamic routes for data filtering
+- All dynamic data must be client-side fetched with React Query
+
+**Deployment Configuration:**
+- Set `basePath` for non-root deployments
+- Configure `images.unoptimized: true` for static exports
+- Handle redirects conditionally (development vs static export)
+
+**File-based Routing:**
+- Page components in `app/` directory
+- Use `"use client"` directive for interactive components
+- Leverage Next.js App Router patterns
