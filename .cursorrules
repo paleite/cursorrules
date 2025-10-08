@@ -1,6 +1,26 @@
 # .cursorrules
 
-> 📋 **Latest Version:** The most up-to-date version of this .cursorrules file is available at: https://raw.githubusercontent.com/paleite/cursorrules/refs/heads/main/.cursorrules
+<!-- #region DO NOT EDIT: Canonical Reference, Adoption Guidelines & Conflict Resolution -->
+
+> 🔒 **Canonical source**
+> The maintained version of this file lives at:
+> https://raw.githubusercontent.com/paleite/cursorrules/refs/heads/main/.cursorrules
+
+> 🧹 **Adoption**
+> When copying this file into a project, **remove sections that do not apply** (unused frameworks, profiles, examples).
+> This keeps the model’s context tight and prevents it from applying unrelated rules.
+
+> 🔀 **Conflict resolution (Cursor Composer must follow)**
+> When any rule here conflicts with existing repository configuration (ESLint, tsconfig, Tailwind, CI, env, routing):
+>
+> 1. **Ask exactly one clarifying question:**
+>    “Should we keep the repository’s current configuration or update it to match `.cursorrules`?”
+>    Include a brief diff preview if helpful.
+> 2. **Apply the chosen path** in your reply by emitting patches that either
+>    (a) adapt `.cursorrules` to the repository, or
+>    (b) update repository files to align with `.cursorrules`.
+
+<!-- #endregion -->
 
 This document provides comprehensive guidance for development with Cursor's Composer, focusing on best practices for Next.js, React (TypeScript), Tailwind CSS + ShadCN, Zod, and react-query.
 
@@ -84,7 +104,7 @@ This document provides comprehensive guidance for development with Cursor's Comp
 
 **Environment & Configuration:**
 - `@t3-oss/env-nextjs` (or `@t3-oss/env-*`) - Type-safe environment variables
-- `sentry` - Error tracking and monitoring
+- `@sentry/nextjs` (Next.js) or `@sentry/react` (Vite/SPA) - Error tracking and monitoring
 
 **Date & Time Handling:**
 - `date-fns` - Date manipulation utilities (avoid direct date manipulation)
@@ -223,6 +243,50 @@ This document provides comprehensive guidance for development with Cursor's Comp
 
 **Quality Gate:**
 Pull Requests must pass: `pnpm nx format:check && pnpm nx lint && pnpm nx typecheck && pnpm nx test` with zero warnings.
+
+### Mocking Strategy (MSW)
+
+**Install:**
+```bash
+pnpm add -D msw @testing-library/react @testing-library/user-event @testing-library/jest-dom
+```
+
+**`src/test/msw/handlers.ts`**
+```ts
+import { http, HttpResponse } from "msw";
+
+export const handlers = [
+  http.get("/api/entities", () => HttpResponse.json({ items: [] }, { status: 200 })),
+];
+```
+
+**`src/test/setup-tests.ts`**
+```ts
+import { setupServer } from "msw/node";
+import { handlers } from "./msw/handlers";
+import "@testing-library/jest-dom";
+
+const server = setupServer(...handlers);
+beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+afterEach(() => server.resetHandlers());
+afterAll(() => server.close());
+```
+
+**`vitest.config.ts` (excerpt)**
+```ts
+test: { environment: "jsdom", setupFiles: ["src/test/setup-tests.ts"], css: true }
+```
+
+**Usage in component tests:**
+```ts
+// example.spec.tsx
+import { render, screen } from "@testing-library/react";
+import { http, HttpResponse } from "msw";
+import { server } from "@/test/msw/setup"; // export server from setup if needed
+
+// Override handlers for specific tests:
+// server.use(http.get("/api/entities", () => HttpResponse.json({ items: [mockData] })))
+```
 
 ### Error Normalization & Monitoring
 
@@ -2097,12 +2161,16 @@ When encountering CORS (Cross-Origin Resource Sharing) errors, follow this troub
 
 ### State Management
 
-- Use Zustand for global application state.
-- Use localStorage persistence when appropriate.
-- Validate with Zod when hydrating from storage.
-- Apply immutable update patterns.
-- Derive complex state when possible instead of storing it.
-- Keep stores small and focused.
+**Decision tree:**
+1. **Server state (authoritative on backend)?** → **React Query** (server state). Avoid Redux for API data.
+2. **Local to one component or small cluster?** → `useState` / `useReducer`.
+3. **Cross-cutting concern with infrequent updates (theme, auth session)?** → **React Context** (read-often, write-rarely).
+4. **Shared, frequently updated, or needs selectors/derived state across distant parts of tree?** → **Zustand** store.
+
+**Zustand rules:**
+- Keep stores small and focused; prefer selectors; derive rather than store
+- Persist only non-sensitive data; **validate persisted shapes with Zod** on hydrate
+- Avoid coupling stores to transport (no axios calls inside stores)
 
 ### Utility Functions
 
@@ -2266,8 +2334,10 @@ export function ProtectedRoute({
 
 ### Configuration Management
 
-- Use typed configs for environment variables (e.g., `@t3-oss/env-nextjs`).
-- Never call `process.env` directly.
+**Environment rules:**
+- Use a typed env wrapper (e.g., `@t3-oss/env-nextjs`) everywhere.
+- **Client code**: never access `process.env` directly; only use `NEXT_PUBLIC_*` from your typed wrapper.
+- **Server-only files** (route handlers, server utils): direct `process.env` reads are acceptable if validated by the wrapper at boot.
 
 ## Integration with Specific Technologies
 
@@ -2321,18 +2391,18 @@ export function ProtectedRoute({
 - Consider static generation strategies for data-heavy pages
 - Use proper cache headers for deployed static assets
 
-## Security Best Practices
+## Security Checklist
 
-- Never store sensitive data in client-side state or localStorage
-- Implement proper token refresh and expiration handling
-- All authentication and authorization must happen appropriately
-- Use session storage for temporary sensitive data when necessary
-- Apply proper authorization checks for UI rendering
-- Sanitize all user-generated content before rendering
-- Follow OWASP security guidelines
-- Use environment variables appropriately
-- Consider security implications of exposing API endpoints
-- Implement proper CORS configuration on backend services
+✅ **Auth tokens** in **HttpOnly** cookies where possible; never in localStorage for long-lived secrets
+✅ **CORS** configured on the server; only use proxies as a last resort
+✅ **XSS prevention**: sanitize any HTML you render (e.g., only near `dangerouslySetInnerHTML`), escape by default
+✅ **CSP headers** set (script-src without unsafe-inline; use nonces/hashes)
+✅ **Form/Mutation inputs** validated with **Zod** on the server (and client for UX)
+✅ **Secrets** never exposed via `NEXT_PUBLIC_*`; client envs contain non-sensitive values only
+✅ **Dependency hygiene**: run `pnpm audit` (or org scanners) in CI before releases
+✅ **Session changes** trigger **global cache invalidation** in React Query to prevent data leakage (see Cache Invalidation on Authentication State Changes)
+✅ **Third-party scripts** reviewed and isolated (defer/async; consider subresource integrity)
+✅ **OWASP guidelines** followed for all security-sensitive operations
 
 ## Conclusion
 
