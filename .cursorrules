@@ -131,6 +131,32 @@ These guidelines detail how to plan, implement, and finalize features while **ch
 
 ## Project Structure and Organization
 
+### ShadCN/UI & Tailwind CSS Setup
+
+**When bootstrapping a new project or adding ShadCN/Tailwind to an existing project:**
+
+1. **Always use ShadCN's init command** to set up both ShadCN and Tailwind CSS:
+   ```bash
+   pnpm dlx shadcn@latest init -d
+   ```
+
+2. **Prefer Tailwind CSS v4** over v3:
+   - When adding ShadCN to a project, upgrade any existing Tailwind v3 to v4
+   - ShadCN's init command will handle the Tailwind setup with the latest version
+
+3. **Install all ShadCN components immediately** after initialization:
+   ```bash
+   pnpm dlx shadcn@latest add --all
+   ```
+   - This command should be run immediately after `shadcn init` in new projects
+   - Run this command any time after ShadCN is added to a project to get all available components
+   - This ensures you have the complete ShadCN component library available
+
+4. **Project structure after ShadCN setup:**
+   - ShadCN components will be added to `src/components/ui/`
+   - Tailwind configuration will be updated automatically
+   - The `cn()` utility will be available at `src/lib/utils.ts`
+
 ### File Structure
 
 - **kebab-case** for filenames.
@@ -1263,13 +1289,82 @@ export default tsEslintConfig(
 
 ### Tailwind CSS & ShadCN
 
+- **Prefer Tailwind CSS v4** over v3 for all new projects and upgrades.
 - Use `import { cn } from "@/lib/utils";` to merge conditional classes.
 - **Never** build class names with string concatenation.
 - **Avoid inline styles**; rely on Tailwind or `class-variance-authority`.
 - Extend Tailwind config for design tokens and to avoid "magic numbers."
-- Use **ShadCN** CSS variables for consistent theming (e.g., `bg-primary text-primary-foreground`).
+- **ALWAYS use ShadCN CSS variables** over regular Tailwind color classes for theming consistency.
 - Use `cva` from `class-variance-authority` to handle component styling variations.
-- Example styling pattern:
+
+#### CSS Variables and Theming
+
+**CSS Variable Usage:**
+- **MUST** use CSS variables (e.g., `bg-muted`, `text-foreground`) instead of regular Tailwind classes (e.g., `bg-zinc-500`, `text-gray-900`)
+- Use appropriate existing CSS variables based on component purpose:
+  - `bg-background text-foreground` - Main app background/text
+  - `bg-card text-card-foreground` - Card containers
+  - `bg-muted text-muted-foreground` - Subdued/secondary content
+  - `bg-primary text-primary-foreground` - Primary actions/highlights
+  - `bg-secondary text-secondary-foreground` - Secondary actions
+  - `bg-accent text-accent-foreground` - Accent elements
+  - `bg-destructive text-destructive-foreground` - Error/danger states
+  - `border-border` - Standard borders
+  - `border-input` - Form input borders
+  - `ring-ring` - Focus rings
+
+**Adding New CSS Variables:**
+When no fitting CSS variable exists for a color need, add a new CSS variable with semantic naming:
+
+1. **Naming Convention:** `--<component>-<role>-<state>`
+   - Component name first (e.g., `notification`, `tooltip`)
+   - Role second (e.g., `border`, `foreground`, `ring`)
+   - State last if needed (e.g., `success`, `warning`, `error`)
+
+2. **Example - Adding notification component variables:**
+```css
+:root {
+  --notification: oklch(0.98 0.05 100);
+  --notification-foreground: oklch(0.22 0.02 100);
+  --notification-border: oklch(0.90 0.02 100);
+  --notification-border-success: oklch(0.92 0.15 142);
+  --notification-border-warning: oklch(0.84 0.16 84);
+}
+
+.dark {
+  --notification: oklch(0.25 0.03 100);
+  --notification-foreground: oklch(0.95 0.03 100);
+  --notification-border: oklch(0.45 0.03 100);
+  --notification-border-success: oklch(0.41 0.11 142);
+  --notification-border-warning: oklch(0.41 0.11 46);
+}
+
+@theme inline {
+  --color-notification: var(--notification);
+  --color-notification-foreground: var(--notification-foreground);
+  --color-notification-border: var(--notification-border);
+  --color-notification-border-success: var(--notification-border-success);
+  --color-notification-border-warning: var(--notification-border-warning);
+}
+```
+
+3. **Usage in components:**
+```tsx
+<div className="bg-notification text-notification-foreground border border-notification-border">
+  <div className="border-l-4 border-l-notification-border-success">
+    Success notification
+  </div>
+</div>
+```
+
+**Key Principles:**
+- Follow the `background`/`foreground` convention (background omitted in class names)
+- Ensure `tailwind.cssVariables: true` is set in `components.json`
+- Always define both light and dark mode variants
+- Add `@theme inline` declarations for proper Tailwind integration
+- Use semantic names tied to component purpose, not visual appearance
+
+Example styling pattern:
 
 ```tsx
 const componentVariants = cva(
