@@ -1747,6 +1747,611 @@ const componentVariants = cva(
 );
 ```
 
+### ShadCN/UI v4 Component Patterns & Composition
+
+**Component Overview & When to Use:**
+
+- **Field**: Simple forms without complex validation. Use for basic inputs, checkboxes, radios.
+- **Form** (react-hook-form): Complex forms with validation, dependencies, or async submit. Use with Zod schemas.
+- **InputGroup**: Any input needing icons, buttons, or text addons. Supports inline-start, inline-end, block-start, block-end.
+- **Item**: Versatile content container. Use for lists, settings panels, notification items, selection cards.
+- **Empty**: Standardized empty states. Use for no data, no results, no permissions scenarios.
+- **ButtonGroup**: Multiple related actions. Use for toolbars, split buttons, segmented controls.
+- **Sidebar**: Full navigation system with cookie persistence, keyboard shortcuts, collapsible modes.
+- **Spinner**: Loading indicators. Use in buttons, badges, input groups, items, empty states.
+- **Kbd**: Keyboard shortcuts display. Use in tooltips, documentation, command palettes.
+
+**Decision Guide:**
+
+```tsx
+// Choose Field for simple forms:
+<Field>
+  <FieldLabel htmlFor="email">Email</FieldLabel>
+  <Input id="email" />
+  <FieldDescription>We'll never share your email.</FieldDescription>
+</Field>
+
+// Choose Form for complex validation:
+<Form {...form}>
+  <FormField
+    control={form.control}
+    name="email"
+    render={({ field }) => (
+      <FormItem>
+        <FormLabel>Email</FormLabel>
+        <FormControl>
+          <Input {...field} />
+        </FormControl>
+        <FormMessage />
+      </FormItem>
+    )}
+  />
+</Form>
+
+// Choose Item over div for structured content:
+<Item variant="outline">
+  <ItemMedia variant="icon">
+    <UserIcon />
+  </ItemMedia>
+  <ItemContent>
+    <ItemTitle>User Profile</ItemTitle>
+    <ItemDescription>Manage your account settings</ItemDescription>
+  </ItemContent>
+  <ItemActions>
+    <Button size="sm">Edit</Button>
+  </ItemActions>
+</Item>
+```
+
+**Data Slot Architecture:**
+
+All v4 components use `data-slot` attributes for styling hooks:
+
+```tsx
+// Components expose data-slot for targeted styling:
+<div data-slot="item">          // Item wrapper
+  <div data-slot="item-media">  // Media container
+  <div data-slot="item-content"> // Content wrapper
+  <div data-slot="item-title">  // Title
+  <div data-slot="item-description"> // Description
+
+// Style specific slots using attribute selectors:
+className="[&>[data-slot=item-title]]:font-bold [&>[data-slot=item-description]]:text-sm"
+
+// Or using group modifiers:
+className="group/item [&_[data-slot=item-title]]:group-hover/item:text-primary"
+```
+
+**Modern CSS Patterns:**
+
+```tsx
+// Container Queries - responsive without media queries:
+<FieldGroup className="@container/field-group">
+  <Field orientation="responsive"> // vertical mobile, horizontal desktop
+    <FieldLabel>Name</FieldLabel>
+    <Input />
+  </Field>
+</FieldGroup>
+
+// Parent-Aware Selectors:
+has-[[data-slot=item-description]] // style parent when child exists
+group-has-[[data-slot=field-content]] // group variant
+peer-data-[state=checked] // style based on sibling state
+
+// State Attributes:
+data-invalid={true} // validation state
+data-state="checked" // interactive state
+data-orientation="horizontal" // layout state
+data-variant="icon" // visual variant
+```
+
+**Focus & Validation Patterns:**
+
+```tsx
+// Consistent focus rings across all inputs:
+className="outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+
+// Validation styling:
+data-invalid={!!errors.email}
+className="data-[invalid=true]:text-destructive data-[invalid=true]:border-destructive"
+
+// Error states with aria:
+<Input aria-invalid={!!errors.email} aria-describedby="email-error" />
+<FieldError id="email-error">{errors.email?.message}</FieldError>
+```
+
+**InputGroup Patterns:**
+
+```tsx
+// Icon addon (most common):
+<InputGroup>
+  <InputGroupAddon alignment="inline-start">
+    <SearchIcon />
+  </InputGroupAddon>
+  <Input placeholder="Search..." />
+</InputGroup>
+
+// Button addon:
+<InputGroup>
+  <Input placeholder="Enter URL" />
+  <InputGroupAddon alignment="inline-end">
+    <Button size="sm">Go</Button>
+  </InputGroupAddon>
+</InputGroup>
+
+// Text addon:
+<InputGroup>
+  <InputGroupAddon alignment="inline-start">
+    https://
+  </InputGroupAddon>
+  <Input placeholder="example.com" />
+</InputGroup>
+
+// Block positioning (above/below):
+<InputGroup>
+  <InputGroupAddon alignment="block-start">
+    <Label>Description</Label>
+  </InputGroupAddon>
+  <Textarea data-slot="input-group-control" />
+</InputGroup>
+
+// Multiple addons:
+<InputGroup>
+  <InputGroupAddon alignment="inline-start">
+    <DollarSignIcon />
+  </InputGroupAddon>
+  <Input type="number" />
+  <InputGroupAddon alignment="inline-end">
+    .00
+  </InputGroupAddon>
+</InputGroup>
+
+// Custom component integration:
+<InputGroup>
+  <Select data-slot="input-group-control">
+    <SelectTrigger>
+      <SelectValue placeholder="Select..." />
+    </SelectTrigger>
+  </Select>
+  <InputGroupAddon alignment="inline-end">
+    <HelpCircleIcon />
+  </InputGroupAddon>
+</InputGroup>
+```
+
+**Empty State Patterns:**
+
+```tsx
+// No data:
+<Empty>
+  <EmptyMedia variant="icon">
+    <InboxIcon />
+  </EmptyMedia>
+  <EmptyContent>
+    <EmptyTitle>No messages yet</EmptyTitle>
+    <EmptyDescription>
+      When you receive messages, they'll appear here.
+    </EmptyDescription>
+  </EmptyContent>
+</Empty>
+
+// No results:
+<Empty>
+  <EmptyMedia variant="icon">
+    <SearchIcon />
+  </EmptyMedia>
+  <EmptyContent>
+    <EmptyTitle>No results found</EmptyTitle>
+    <EmptyDescription>
+      Try adjusting your search or filter to find what you're looking for.
+    </EmptyDescription>
+  </EmptyContent>
+  <EmptyActions>
+    <Button onClick={clearFilters}>Clear filters</Button>
+  </EmptyActions>
+</Empty>
+
+// No permissions:
+<Empty>
+  <EmptyMedia variant="icon">
+    <LockIcon />
+  </EmptyMedia>
+  <EmptyContent>
+    <EmptyTitle>Access denied</EmptyTitle>
+    <EmptyDescription>
+      You don't have permission to view this resource.
+    </EmptyDescription>
+  </EmptyContent>
+  <EmptyActions>
+    <Button onClick={requestAccess}>Request access</Button>
+  </EmptyActions>
+</Empty>
+
+// With image:
+<Empty>
+  <EmptyMedia variant="image">
+    <img src="/empty-state.svg" alt="" />
+  </EmptyMedia>
+  <EmptyContent>
+    <EmptyTitle>Get started</EmptyTitle>
+    <EmptyDescription>
+      Create your first project to begin.
+    </EmptyDescription>
+  </EmptyContent>
+  <EmptyActions>
+    <Button>Create project</Button>
+  </EmptyActions>
+</Empty>
+
+// Loading with spinner:
+<Empty>
+  <EmptyMedia variant="icon">
+    <Spinner className="size-8" />
+  </EmptyMedia>
+  <EmptyContent>
+    <EmptyTitle>Loading...</EmptyTitle>
+    <EmptyDescription>Please wait while we fetch your data.</EmptyDescription>
+  </EmptyContent>
+</Empty>
+```
+
+**Button Enhancements:**
+
+```tsx
+// New icon sizes:
+<Button size="icon-sm">      // size-8
+  <PlusIcon />
+</Button>
+<Button size="icon">         // size-9 (default)
+  <PlusIcon />
+</Button>
+<Button size="icon-lg">      // size-10
+  <PlusIcon />
+</Button>
+
+// Automatic icon spacing (no manual gap needed):
+<Button>
+  <SaveIcon />
+  Save changes
+</Button>
+
+// Loading state with spinner:
+<Button disabled={isLoading}>
+  {isLoading && <Spinner />}
+  {isLoading ? "Saving..." : "Save"}
+</Button>
+
+// ButtonGroup:
+<ButtonGroup>
+  <Button variant="outline">
+    <AlignLeftIcon />
+  </Button>
+  <Button variant="outline">
+    <AlignCenterIcon />
+  </Button>
+  <Button variant="outline">
+    <AlignRightIcon />
+  </Button>
+</ButtonGroup>
+
+// Split button:
+<ButtonGroup>
+  <Button>Save</Button>
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button variant="outline" size="icon">
+        <ChevronDownIcon />
+      </Button>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent>
+      <DropdownMenuItem>Save as draft</DropdownMenuItem>
+      <DropdownMenuItem>Save and publish</DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+</ButtonGroup>
+```
+
+**Sidebar Implementation:**
+
+```tsx
+// Complete sidebar setup:
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar"
+
+export function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg">
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <GalleryVerticalEndIcon />
+                </div>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-semibold">Acme Inc</span>
+                  <span className="text-xs">Enterprise</span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="/dashboard">
+                      <HomeIcon />
+                      <span>Dashboard</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <a href="/projects">
+                      <FolderIcon />
+                      <span>Projects</span>
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>
+                <UserIcon />
+                <span>Account</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
+      <SidebarInset>
+        <header className="flex h-16 items-center gap-2 border-b px-4">
+          <SidebarTrigger />
+          <h1>Page Title</h1>
+        </header>
+        <main className="p-4">{children}</main>
+      </SidebarInset>
+    </SidebarProvider>
+  )
+}
+
+// Collapsible mode configuration:
+<SidebarProvider defaultCollapsed={false} collapsibleMode="icon">
+  // "offcanvas" - mobile overlay
+  // "icon" - icon-only mode
+  // "none" - always expanded
+</SidebarProvider>
+
+// Cookie persistence (automatic):
+// Sidebar state persists via cookies, no additional code needed
+
+// Keyboard shortcut (Cmd/Ctrl + B) works automatically
+```
+
+**Kbd Component:**
+
+```tsx
+// Single key:
+<Kbd>K</Kbd>
+
+// Key combination:
+<Kbd>
+  <KbdKey>⌘</KbdKey>
+  <KbdKey>K</KbdKey>
+</Kbd>
+
+// In tooltips:
+<TooltipContent>
+  <p>Search</p>
+  <Kbd className="ml-2">
+    <KbdKey>⌘</KbdKey>
+    <KbdKey>K</KbdKey>
+  </Kbd>
+</TooltipContent>
+
+// In button labels:
+<Button variant="outline">
+  <SearchIcon />
+  Quick search
+  <Kbd>
+    <KbdKey>⌘</KbdKey>
+    <KbdKey>K</KbdKey>
+  </Kbd>
+</Button>
+```
+
+**Spinner Usage:**
+
+```tsx
+// Basic:
+<Spinner />
+
+// Size variants:
+<Spinner className="size-4" />
+<Spinner className="size-6" />
+<Spinner className="size-8" />
+
+// Color variants:
+<Spinner className="text-primary" />
+<Spinner className="text-destructive" />
+<Spinner className="text-muted-foreground" />
+
+// In buttons:
+<Button disabled={isLoading}>
+  {isLoading && <Spinner />}
+  Save
+</Button>
+
+// In badges:
+<Badge>
+  <Spinner className="size-3" />
+  Processing
+</Badge>
+
+// In input groups:
+<InputGroup>
+  <Input />
+  <InputGroupAddon alignment="inline-end">
+    {isValidating && <Spinner className="size-4" />}
+  </InputGroupAddon>
+</InputGroup>
+
+// In items:
+<Item>
+  <ItemMedia>
+    <Spinner />
+  </ItemMedia>
+  <ItemContent>
+    <ItemTitle>Loading data...</ItemTitle>
+  </ItemContent>
+</Item>
+
+// In empty states:
+<Empty>
+  <EmptyMedia variant="icon">
+    <Spinner className="size-8" />
+  </EmptyMedia>
+  <EmptyContent>
+    <EmptyTitle>Loading...</EmptyTitle>
+  </EmptyContent>
+</Empty>
+```
+
+**Advanced Composition Patterns:**
+
+```tsx
+// Item as link with asChild:
+<Item asChild variant="outline">
+  <a href="/settings">
+    <ItemMedia variant="icon">
+      <SettingsIcon />
+    </ItemMedia>
+    <ItemContent>
+      <ItemTitle>Settings</ItemTitle>
+      <ItemDescription>Configure your preferences</ItemDescription>
+    </ItemContent>
+    <ItemActions>
+      <ChevronRightIcon />
+    </ItemActions>
+  </a>
+</Item>
+
+// Field with checkbox in label (card-style):
+<Field>
+  <FieldLabel>
+    <Field>
+      <Checkbox data-state={checked ? "checked" : "unchecked"} />
+      <FieldContent>
+        <FieldTitle>Enable notifications</FieldTitle>
+        <FieldDescription>
+          Get notified when someone mentions you
+        </FieldDescription>
+      </FieldContent>
+    </Field>
+  </FieldLabel>
+</Field>
+
+// ItemGroup with separators:
+<ItemGroup>
+  <Item variant="outline">
+    <ItemContent>
+      <ItemTitle>First item</ItemTitle>
+    </ItemContent>
+  </Item>
+  <ItemSeparator />
+  <Item variant="outline">
+    <ItemContent>
+      <ItemTitle>Second item</ItemTitle>
+    </ItemContent>
+  </Item>
+  <ItemSeparator />
+  <Item variant="outline">
+    <ItemContent>
+      <ItemTitle>Third item</ItemTitle>
+    </ItemContent>
+  </Item>
+</ItemGroup>
+
+// Responsive field orientation:
+<FieldGroup className="@container/field-group">
+  <Field orientation="responsive">
+    <FieldLabel>Full name</FieldLabel>
+    <Input />
+  </Field>
+</FieldGroup>
+
+// Field with header and footer:
+<Field>
+  <ItemHeader>
+    <FieldLabel>Project name</FieldLabel>
+    <Button variant="ghost" size="icon-sm">
+      <HelpCircleIcon />
+    </Button>
+  </ItemHeader>
+  <Input />
+  <ItemFooter>
+    <FieldDescription>This will be visible to everyone</FieldDescription>
+    <span className="text-muted-foreground text-xs">0/50</span>
+  </ItemFooter>
+</Field>
+```
+
+**Component Composition Checklist:**
+
+- ✅ **Field orientation**: Use `responsive` for forms that need to adapt to container width
+- ✅ **Item variants**: Use `outline` for card-like items, `muted` for secondary items
+- ✅ **InputGroup alignment**: `inline-start/end` for icons/buttons, `block-start/end` for labels
+- ✅ **Empty variants**: `icon` for most cases, `image` for branded/marketing empty states
+- ✅ **Button sizes**: Use `icon-sm/icon/icon-lg` for icon-only buttons, `sm/default/lg` for text buttons
+- ✅ **Media variants**: Use `icon` variant when showing icons, `image` for avatars/thumbnails
+- ✅ **Data slots**: Add `data-slot` to custom components for consistent styling hooks
+- ✅ **Focus states**: Apply `focus-visible:ring-ring/50 focus-visible:ring-[3px]` to all inputs
+- ✅ **Validation states**: Use `data-invalid={!!error}` with `aria-invalid` for accessibility
+- ✅ **Loading states**: Show `<Spinner />` in buttons, empty states, or items during async operations
+- ✅ **AsChild prop**: Use for polymorphic components (Item, Button) when wrapping in Link or other elements
+- ✅ **Kbd shortcuts**: Display keyboard shortcuts in tooltips, buttons, or command palettes
+- ✅ **Sidebar persistence**: Let cookie-based state management handle collapse/expand automatically
+- ✅ **Group variants**: Use `group/[name]` pattern for scoped group styling
+- ✅ **Container queries**: Wrap fields in `@container/field-group` for responsive layouts
+- ✅ **Parent-aware selectors**: Use `has-[]` for conditional styling based on child existence
+- ✅ **State attributes**: Expose component state via `data-*` attributes for external styling
+- ✅ **Separator usage**: Use `<ItemSeparator />` between items, `<FieldSeparator />` for form sections
+
+**Common Pitfalls:**
+
+- ❌ Don't use `div` when `Item` provides better structure and styling hooks
+- ❌ Don't manually add gap classes to buttons with icons - they handle spacing automatically
+- ❌ Don't forget `data-slot="input-group-control"` when using custom components in InputGroup
+- ❌ Don't mix Field and Form approaches in the same form
+- ❌ Don't use media queries when container queries (`@container`) are more appropriate
+- ❌ Don't create custom empty states - use `<Empty />` for consistency
+- ❌ Don't forget `aria-invalid` and `aria-describedby` for validation errors
+- ❌ Don't hardcode keyboard shortcuts - use `<Kbd />` component
+- ❌ Don't manually manage sidebar state - rely on cookie persistence
+- ❌ Don't use loading text without spinner visual indicator
+
 ### React
 
 - **Always enable React Strict Mode** for better development experience and future compatibility.
