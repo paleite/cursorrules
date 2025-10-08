@@ -23,6 +23,107 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - String concatenation to build class names; use the `cn()` utility.
 - Default exports (except in Next.js pages).
 
+## Essential Dependencies & Tooling
+
+### Production Dependencies
+
+**Core Framework & State Management:**
+- `@tanstack/react-query` + `@tanstack/react-query-devtools` - Async data fetching and caching
+- `@tanstack/react-table` - Tables with sorting, filtering, pagination
+- `zustand` - Global client-side state management
+- `zod` - Schema validation for all data
+
+**Forms & Validation:**
+- `react-hook-form` - Form handling
+- `@hookform/resolvers` - Zod integration with react-hook-form
+- `@hookform/devtools` - Form debugging (devDep)
+
+**UI & Styling:**
+- `@ebay/nice-modal-react` - Modal management
+- `class-variance-authority` - Component style variants (same as ShadCN)
+- `clsx` - Conditional class names (via `cn()` utility)
+- `tailwind-merge` - Tailwind class merging (via `cn()` utility)
+
+**HTTP & API Integration:**
+- `axios` - HTTP client (instead of fetch)
+- `@zodios/core` + `@zodios/plugins` - Type-safe API client with Zod
+  - Use `import type { ZodiosPlugin } from "@zodios/core"` to create custom plugins for auth tokens and request/response interceptors
+- `openapi-zod-client` - Generate Zod schemas from OpenAPI/Swagger
+
+**Environment & Configuration:**
+- `@t3-oss/env-nextjs` (or `@t3-oss/env-*`) - Type-safe environment variables
+- `sentry` - Error tracking and monitoring
+
+**Date & Time Handling:**
+- `date-fns` - Date manipulation utilities (avoid direct date manipulation)
+
+**Internationalization:**
+- `i18next` + `react-i18next` - Core i18n framework
+- `i18next-icu` - ICU message format support
+- `intl-messageformat` - Message formatting
+- `i18next-parser` - Extract translation keys (devDep)
+
+### Development Dependencies
+
+**TypeScript Configuration:**
+- `@tsconfig/strictest` - Strictest TypeScript config
+- `@tsconfig/nextjs` - Next.js TypeScript config (when using Next.js)
+- `typescript` - TypeScript compiler
+
+**Testing Framework:**
+- `vitest` + `@vitest/coverage-v8` - Unit testing (or `bun test` for small projects)
+- `@testing-library/dom` + `@testing-library/react` - React testing utilities
+- `@testing-library/user-event` + `@testing-library/jest-dom` - Testing helpers
+- `@types/testing-library__jest-dom` - TypeScript types for jest-dom
+
+**Linting & Code Quality:**
+- **ESLint Core:** `eslint` + `@eslint/js` + `typescript-eslint`
+- **React:** `eslint-plugin-react` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`
+- **Imports:** `eslint-plugin-import-x` (prefer over `eslint-plugin-import`)
+- **Import Sorting:** `eslint-plugin-simple-import-sort` + `eslint-plugin-unused-imports`
+- **Code Quality:** `eslint-plugin-promise` + `eslint-plugin-jsx-a11y`
+- **Framework Specific:**
+  - `@tanstack/eslint-plugin-query` - React Query best practices
+  - `eslint-config-next` - Next.js specific rules (when using Next.js)
+- **Testing:** `eslint-plugin-testing-library` + `eslint-plugin-vitest`
+- **Configuration:** `eslint-config-prettier` + `eslint-import-resolver-typescript`
+
+**Optional ESLint Plugins (as needed):**
+- `eslint-plugin-storybook` - Storybook specific rules
+- `eslint-plugin-unicorn` - Additional code quality rules
+- `eslint-plugin-jest-dom` - jest-dom specific rules
+- `eslint-plugin-playwright` - Playwright testing rules
+
+**Formatting:**
+- `prettier` + `prettier-plugin-tailwindcss` - Code formatting with Tailwind class sorting
+
+**Build & Compilation:**
+- `@swc/core` - Fast TypeScript/JavaScript compiler (prefer over Babel when possible)
+
+**Git Hooks & Commit Management:**
+- `husky` - Git hooks management
+- `pretty-quick` - Run Prettier on staged files
+- `jira-prepare-commit-msg` - Auto-prefix commits with JIRA issue keys
+
+**Spell Checking:**
+- `@cspell/dict-sv` - Swedish dictionary (add other language dictionaries as needed)
+
+### Key Dependency Principles
+
+**Prefer over alternatives:**
+- `axios` instead of `fetch()` directly
+- `@tanstack/react-query` instead of `useEffect` + manual async state
+- `eslint-plugin-import-x` instead of `eslint-plugin-import`
+- `vitest` instead of Jest for new projects
+- `@swc/core` instead of Babel when possible
+- `date-fns` instead of moment.js or direct date manipulation
+
+**Integration Notes:**
+- **React Hooks v6+:** No longer need `eslint-plugin-react-compiler` (integrated into `eslint-plugin-react-hooks`)
+- **Testing:** Use Vitest for unit tests, consider Playwright for E2E
+- **TypeScript:** Always use strictest possible configuration
+- **Internationalization:** Set up for SSR compatibility with initial page rendering
+
 ## Working with Cursor Composer
 
 ### Before You Start
@@ -1391,6 +1492,7 @@ const componentVariants = cva(
 
 ### React
 
+- **Always enable React Strict Mode** for better development experience and future compatibility.
 - For props, define a `[ComponentName]Props` type.
 - Don't inline `children` in the props type; use `PropsWithChildren`.
 - **Custom Hooks** should do one job well, with consistent return signatures.
@@ -1399,6 +1501,28 @@ const componentVariants = cva(
 - Mark all components that use hooks or browser APIs with `"use client"`.
 - Keep components focused on a single responsibility.
 - Extract complex logic to custom hooks.
+
+**React Strict Mode Configuration:**
+```typescript
+// For Next.js - add to next.config.js/ts
+const nextConfig = {
+  reactStrictMode: true,
+  // other config...
+};
+```
+
+```tsx
+// For other React apps - wrap your app component
+import { StrictMode } from 'react';
+
+function App() {
+  return (
+    <StrictMode>
+      <YourApp />
+    </StrictMode>
+  );
+}
+```
 
 ### React Hooks
 
