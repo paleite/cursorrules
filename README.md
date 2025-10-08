@@ -1,6 +1,17 @@
 # cursorrules
 
-.cursorrules I like to use
+.cursorrules I like to use for my projects.
+
+---
+
+The .cursorrules file contains instructions on how to adopt it in your existing project in a way that makes sense for _your_ needs.
+
+To adopt this .cursorrules file in your project, prompt your LLM with something
+like this:
+
+```markdown
+Move the current `.cursorrules` (if any) to `.cursorrules-local-backup`, then download and follow the instructions in this `.cursorrules` file: `https://raw.githubusercontent.com/paleite/cursorrules/refs/heads/main/.cursorrules`
+```
 
 ---
 
