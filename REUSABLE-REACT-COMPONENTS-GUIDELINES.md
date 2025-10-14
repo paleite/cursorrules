@@ -1,5 +1,44 @@
 # Reusable React Components Guidelines
 
+<!-- #region DO NOT EDIT: Canonical Reference & Adoption Guidelines -->
+
+> 🔒 **Canonical source**
+> The maintained version of this file lives at:
+> https://raw.githubusercontent.com/paleite/cursorrules/refs/heads/main/REUSABLE-REACT-COMPONENTS-GUIDELINES.md
+
+> 🧹 **Adoption**
+> These guidelines document shadcn/ui v4 patterns for building reusable React components.
+> Use as a reference when building component libraries or when standardizing component architecture in your project.
+
+> 🔀 **When patterns conflict**
+> If these guidelines conflict with your existing component patterns:
+>
+> 1. **Evaluate which approach better serves your needs:**
+>    Consider type safety, accessibility, maintainability, and team familiarity.
+> 2. **Document your decision:**
+>    If adopting these patterns, update existing components incrementally.
+>    If keeping current patterns, document why they better serve your use case.
+
+<!-- #endregion -->
+
+<!-- #region Project-Specific Pattern Decisions -->
+
+> 📝 **Project-specific pattern decisions**
+> Document any deliberate deviations from these component patterns below.
+> This section must be preserved when updating to newer versions of this guide.
+
+<!-- Example:
+## Pattern Decision: Not using data-slot attributes
+**Reason:** Our component library predates this pattern; existing CSS selectors rely on class names.
+**Date:** 2024-01-15
+**Scope:** All UI components in src/components/ui/
+**Alternative approach:** Using BEM methodology for component identification
+-->
+
+<!-- Add your pattern decisions here -->
+
+<!-- #endregion -->
+
 > A comprehensive guide to building reusable React components following shadcn/ui v4 patterns and conventions.
 
 ## Table of Contents
@@ -934,11 +973,11 @@ type SidebarContextProps = {
 }
 
 // 2. Create context
-const SidebarContext = React.createContext<SidebarContextProps | null>(null)
+const SidebarContext = createContext<SidebarContextProps | null>(null)
 
 // 3. Custom hook with error handling
 function useSidebar() {
-  const context = React.useContext(SidebarContext)
+  const context = useContext(SidebarContext)
   if (!context) {
     throw new Error("useSidebar must be used within a SidebarProvider.")
   }
@@ -957,19 +996,19 @@ function SidebarProvider({
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }) {
-  const [_open, _setOpen] = React.useState(defaultOpen)
-  const open = openProp ?? _open
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
+  const open = openProp ?? internalOpen
 
-  const setOpen = React.useCallback((value: boolean | ((value: boolean) => boolean)) => {
+  const setOpen = useCallback((value: boolean | ((value: boolean) => boolean)) => {
     const openState = typeof value === "function" ? value(open) : value
     if (setOpenProp) {
       setOpenProp(openState)
     } else {
-      _setOpen(openState)
+      setInternalOpen(openState)
     }
   }, [setOpenProp, open])
 
-  const contextValue = React.useMemo<SidebarContextProps>(
+  const contextValue = useMemo<SidebarContextProps>(
     () => ({ state: open ? "expanded" : "collapsed", open, setOpen, ... }),
     [open, setOpen, ...]
   )
@@ -1000,13 +1039,13 @@ function SidebarProvider({
   ...props
 }) {
   // Internal state for uncontrolled
-  const [_open, _setOpen] = React.useState(defaultOpen)
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
 
   // Use controlled value if provided, otherwise internal
-  const open = openProp ?? _open
+  const open = openProp ?? internalOpen
 
   // Unified setter that handles both modes
-  const setOpen = React.useCallback(
+  const setOpen = useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
 
@@ -1015,7 +1054,7 @@ function SidebarProvider({
         setOpenProp(openState)
       } else {
         // Otherwise update internal state
-        _setOpen(openState)
+        setInternalOpen(openState)
       }
     },
     [setOpenProp, open]
@@ -1044,14 +1083,14 @@ Persist state to cookies for SSR compatibility:
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-const setOpen = React.useCallback(
+const setOpen = useCallback(
   (value: boolean | ((value: boolean) => boolean)) => {
     const openState = typeof value === "function" ? value(open) : value;
 
     if (setOpenProp) {
       setOpenProp(openState);
     } else {
-      _setOpen(openState);
+      setInternalOpen(openState);
     }
 
     // Persist to cookie
@@ -1430,7 +1469,7 @@ Complex sidebar with state management and responsive behavior:
 function SidebarProvider({ defaultOpen = true, ...props }) {
   const isMobile = useIsMobile()
   const [openMobile, setOpenMobile] = useState(false)
-  const [_open, _setOpen] = useState(defaultOpen)
+  const [internalOpen, setInternalOpen] = useState(defaultOpen)
 
   // Mobile vs desktop state
   const toggleSidebar = useCallback(() => {

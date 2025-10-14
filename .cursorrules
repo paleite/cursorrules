@@ -22,6 +22,23 @@
 
 <!-- #endregion -->
 
+<!-- #region Project-Specific Overrides -->
+
+> 📝 **Project-specific overrides**
+> Document any deliberate deviations from the canonical .cursorrules below.
+> This section must be preserved when updating to newer versions of .cursorrules.
+
+<!-- Example:
+## Override: Using Jest instead of Vitest
+**Reason:** Legacy codebase with extensive Jest test suite; migration cost not justified.
+**Date:** 2024-01-15
+**Files affected:** All test files, jest.config.js
+-->
+
+<!-- Add your overrides here -->
+
+<!-- #endregion -->
+
 This document provides comprehensive guidance for development with Cursor's Composer, focusing on best practices for Next.js, React (TypeScript), Tailwind CSS + ShadCN, Zod, and react-query.
 
 ## Version Specifications & Project Profiles
@@ -80,6 +97,29 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - Keep functions under 50 lines, components under 100 lines when possible
 - When renaming exports, keep old names as aliases to prevent breaking changes
 - Use valid Tailwind classes with bracket notation for custom values
+
+## Automated Code Quality Workflow
+
+**After editing any files, always run the following in sequence:**
+
+1. **Run linters in the background first** (e.g., `pnpm lint --fix` or equivalent)
+   - Wait for linting to complete before proceeding
+   - Auto-fixes formatting issues, unused imports, and other auto-fixable errors
+
+2. **Run formatters in the background second** (e.g., `pnpm format` or equivalent)
+   - Wait for formatting to complete
+   - Ensures consistent code style across the project
+
+**Why this order matters:**
+- Linters can auto-fix many issues (unused imports, simple violations)
+- Formatters ensure consistent code style after lint fixes
+- Running these in the background with auto-fix is much cheaper than manually fixing issues
+- This prevents you from spending time manually fixing issues that tooling can handle automatically
+
+**Implementation:**
+- Use the `run_in_background` parameter when calling the Bash tool
+- Wait for each step to complete before proceeding to the next
+- Only address remaining issues manually after automated fixes are applied
 
 ## Core Technical Mandates
 
