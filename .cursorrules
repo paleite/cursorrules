@@ -44,12 +44,15 @@ This document provides comprehensive guidance for development with Cursor's Comp
 ## Version Specifications & Project Profiles
 
 **Framework Versions (check project-specific requirements):**
+
 - **React Query:** v5 (use `queryOptions`, `useSuspenseQuery`, etc.)
 - **Tailwind CSS:** Prefer v4, but v3 acceptable in legacy/large projects
 - **TypeScript:** Use `type` by default; `interface` only when declaration merging needed
 
 **Project Profile Detection:**
+
 1. **Check project root for profile indicators:**
+
    - `nx.json` → Use [Nx Monorepo Profile](#profile-nx-monorepo)
    - `turbo.json` → Use [Turborepo Profile](#profile-turborepo)
    - `next.config.js/ts` → Additional [Next.js Profile](#profile-nextjs) considerations
@@ -79,6 +82,7 @@ This document provides comprehensive guidance for development with Cursor's Comp
 3. **End with key refinements list** showing specific improvements made
 
 **Core refactoring principles:**
+
 - Rename variables and functions to be more descriptive and context-appropriate
 - Prefer functional components with hooks over class components
 - Always use strict equality (`===`) instead of loose equality (`==`)
@@ -103,6 +107,7 @@ This document provides comprehensive guidance for development with Cursor's Comp
 **After editing any files, always run the following in sequence:**
 
 1. **Run linters in the background first** (e.g., `pnpm lint --fix` or equivalent)
+
    - Wait for linting to complete before proceeding
    - Auto-fixes formatting issues, unused imports, and other auto-fixable errors
 
@@ -111,12 +116,14 @@ This document provides comprehensive guidance for development with Cursor's Comp
    - Ensures consistent code style across the project
 
 **Why this order matters:**
+
 - Linters can auto-fix many issues (unused imports, simple violations)
 - Formatters ensure consistent code style after lint fixes
 - Running these in the background with auto-fix is much cheaper than manually fixing issues
 - This prevents you from spending time manually fixing issues that tooling can handle automatically
 
 **Implementation:**
+
 - Use the `run_in_background` parameter when calling the Bash tool
 - Wait for each step to complete before proceeding to the next
 - Only address remaining issues manually after automated fixes are applied
@@ -147,23 +154,27 @@ This document provides comprehensive guidance for development with Cursor's Comp
 ### Production Dependencies
 
 **Core Framework & State Management:**
+
 - `@tanstack/react-query` + `@tanstack/react-query-devtools` - Async data fetching and caching
 - `@tanstack/react-table` - Tables with sorting, filtering, pagination
 - `zustand` - Global client-side state management
 - `zod` - Schema validation for all data
 
 **Forms & Validation:**
+
 - `react-hook-form` - Form handling
 - `@hookform/resolvers` - Zod integration with react-hook-form
 - `@hookform/devtools` - Form debugging (devDep)
 
 **UI & Styling:**
+
 - `@ebay/nice-modal-react` - Modal management
 - `class-variance-authority` - Component style variants (same as ShadCN)
 - `clsx` - Conditional class names (via `cn()` utility)
 - `tailwind-merge` - Tailwind class merging (via `cn()` utility)
 
 **HTTP & API Integration:**
+
 - `axios` - **Primary HTTP client** (always prefer over `fetch()` directly)
 - `@zodios/core` + `@zodios/plugins` - **Use when project has OpenAPI/Swagger** schemas
   - Zodios uses Axios under the hood for type-safe API clients
@@ -171,13 +182,16 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - `openapi-zod-client` - **Codegen tool that creates APIs using Zodios under the hood** from OpenAPI/Swagger specs
 
 **Environment & Configuration:**
+
 - `@t3-oss/env-nextjs` (or `@t3-oss/env-*`) - Type-safe environment variables
 - `@sentry/nextjs` (Next.js) or `@sentry/react` (Vite/SPA) - Error tracking and monitoring
 
 **Date & Time Handling:**
+
 - `date-fns` - Date manipulation utilities (avoid direct date manipulation)
 
 **Internationalization:**
+
 - `i18next` + `react-i18next` - Core i18n framework
 - `i18next-icu` - ICU message format support
 - `intl-messageformat` - Message formatting
@@ -186,17 +200,20 @@ This document provides comprehensive guidance for development with Cursor's Comp
 ### Development Dependencies
 
 **TypeScript Configuration:**
+
 - `@tsconfig/strictest` - Strictest TypeScript config
 - `@tsconfig/nextjs` - Next.js TypeScript config (when using Next.js)
 - `typescript` - TypeScript compiler
 
 **Testing Framework:**
+
 - `vitest` + `@vitest/coverage-v8` - Unit testing (or `bun test` for small projects)
 - `@testing-library/dom` + `@testing-library/react` - React testing utilities
 - `@testing-library/user-event` + `@testing-library/jest-dom` - Testing helpers
 - `@types/testing-library__jest-dom` - TypeScript types for jest-dom
 
 **Linting & Code Quality:**
+
 - **ESLint Core:** `eslint` + `@eslint/js` + `typescript-eslint`
 - **React:** `eslint-plugin-react` + `eslint-plugin-react-hooks` + `eslint-plugin-react-refresh`
 - **Imports:** `eslint-plugin-import-x` (prefer over `eslint-plugin-import`)
@@ -209,6 +226,7 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - **Configuration:** `eslint-config-prettier` + `eslint-import-resolver-typescript`
 
 **Type Consistency Enforcement:**
+
 ```javascript
 // eslint.config.mjs - enforce "type" with narrow override escape hatch
 {
@@ -225,28 +243,34 @@ This document provides comprehensive guidance for development with Cursor's Comp
 ```
 
 **Optional ESLint Plugins (as needed):**
+
 - `eslint-plugin-storybook` - Storybook specific rules
 - `eslint-plugin-unicorn` - Additional code quality rules
 - `eslint-plugin-jest-dom` - jest-dom specific rules
 - `eslint-plugin-playwright` - Playwright testing rules
 
 **Formatting:**
+
 - `prettier` + `prettier-plugin-tailwindcss` - Code formatting with Tailwind class sorting
 
 **Build & Compilation:**
+
 - `@swc/core` - Fast TypeScript/JavaScript compiler (prefer over Babel when possible)
 
 **Git Hooks & Commit Management:**
+
 - `husky` - Git hooks management
 - `pretty-quick` - Run Prettier on staged files
 - `jira-prepare-commit-msg` - Auto-prefix commits with JIRA issue keys
 
 **Spell Checking:**
+
 - `@cspell/dict-sv` - Swedish dictionary (add other language dictionaries as needed)
 
 ### Key Dependency Principles
 
 **Prefer over alternatives:**
+
 - `axios` instead of `fetch()` directly
 - `@tanstack/react-query` instead of `useEffect` + manual async state
 - `eslint-plugin-import-x` instead of `eslint-plugin-import`
@@ -255,6 +279,7 @@ This document provides comprehensive guidance for development with Cursor's Comp
 - `date-fns` instead of moment.js or direct date manipulation
 
 **Integration Notes:**
+
 - **React Hooks v6+:** No longer need `eslint-plugin-react-compiler` (integrated into `eslint-plugin-react-hooks`)
 - **Testing:** Use Vitest for unit tests, consider Playwright for E2E
 - **TypeScript:** Always use strictest possible configuration
@@ -263,31 +288,38 @@ This document provides comprehensive guidance for development with Cursor's Comp
 ## Accessibility & Internationalization Checklists
 
 ### Accessibility (A11y) Requirements
+
 **Dialog/Modal Components:**
+
 - ✅ Focus trap implemented (focus stays within modal)
 - ✅ Keyboard navigation works (Tab, Shift+Tab, Escape)
 - ✅ Focus returns to trigger element on close
 - ✅ ARIA labels and roles properly set (`role="dialog"`, `aria-labelledby`, `aria-describedby`)
 
 **Interactive Elements:**
+
 - ✅ Color contrast meets WCAG AA standards (4.5:1 for normal text)
 - ✅ Keyboard navigation for all interactive elements
 - ✅ Focus indicators visible and clear
 - ✅ Screen reader support with proper ARIA attributes
 
 **Forms:**
+
 - ✅ All form inputs have associated labels
 - ✅ Error messages are descriptive and announced to screen readers
 - ✅ Form validation feedback is accessible
 
 ### Internationalization (i18n) Requirements
+
 **Text Content:**
+
 - ✅ All user-facing strings go through i18n system (no hardcoded strings)
 - ✅ Use ICU message format for plurals and complex formatting
 - ✅ Dates, numbers, and currencies properly localized
 - ✅ Text direction (RTL/LTR) support when needed
 
 **Implementation:**
+
 - ✅ Translation keys follow consistent naming convention
 - ✅ Context provided for translators when meaning is ambiguous
 - ✅ Dynamic content (user names, counts, etc.) properly handled in translations
@@ -295,17 +327,21 @@ This document provides comprehensive guidance for development with Cursor's Comp
 ## Testing Policy & Error Handling
 
 ### Testing Strategy (Test Pyramid)
+
 **Target Ratios (guidelines):**
+
 - **Unit Tests:** 60-70% (Vitest)
 - **Component/Integration Tests:** 25-35% (Testing Library + MSW)
 - **E2E Tests:** 5-10% (Playwright)
 
 **Required in Every LLM Output:**
+
 1. **Unit tests** for pure logic and utilities
 2. **Component tests** for main behavior using Testing Library
 3. **E2E specs** for critical user flows (when user journeys are affected)
 
 **Commands (Nx projects):**
+
 - `pnpm nx run-many --target=test --all -- --coverage --reporter=default`
 - `pnpm nx run-many --target=e2e --all`
 
@@ -315,20 +351,25 @@ Pull Requests must pass: `pnpm nx format:check && pnpm nx lint && pnpm nx typech
 ### Mocking Strategy (MSW)
 
 **Install:**
+
 ```bash
 pnpm add -D msw @testing-library/react @testing-library/user-event @testing-library/jest-dom
 ```
 
 **`src/test/msw/handlers.ts`**
+
 ```ts
 import { http, HttpResponse } from "msw";
 
 export const handlers = [
-  http.get("/api/entities", () => HttpResponse.json({ items: [] }, { status: 200 })),
+  http.get("/api/entities", () =>
+    HttpResponse.json({ items: [] }, { status: 200 }),
+  ),
 ];
 ```
 
 **`src/test/setup-tests.ts`**
+
 ```ts
 import { setupServer } from "msw/node";
 import { handlers } from "./msw/handlers";
@@ -341,11 +382,13 @@ afterAll(() => server.close());
 ```
 
 **`vitest.config.ts` (excerpt)**
+
 ```ts
 test: { environment: "jsdom", setupFiles: ["src/test/setup-tests.ts"], css: true }
 ```
 
 **Usage in component tests:**
+
 ```ts
 // example.spec.tsx
 import { render, screen } from "@testing-library/react";
@@ -359,16 +402,24 @@ import { server } from "@/test/msw/setup"; // export server from setup if needed
 ### Error Normalization & Monitoring
 
 **Centralized Error Handling:**
+
 - **Single error shape:** All errors normalized to `RequestError` class
 - **Boundary validation:** Validate all external data with Zod at trust boundaries
 - **Global handling:** React Query cache handles errors with toast + Sentry reporting
 - **User-friendly messages:** Convert technical errors to user-facing messages
 
 **Implementation Pattern:**
+
 ```typescript
 // Centralized error normalization
 export class RequestError extends Error {
-  constructor({ message, httpStatusCode, code, details, cause }: {
+  constructor({
+    message,
+    httpStatusCode,
+    code,
+    details,
+    cause,
+  }: {
     message: string;
     httpStatusCode?: number;
     code?: string;
@@ -384,7 +435,9 @@ export class RequestError extends Error {
 // Axios interceptor ensures consistent error shape
 axiosClient.interceptors.response.use(
   (response) => response,
-  (error) => { throw normalizeUnknownError(error); }
+  (error) => {
+    throw normalizeUnknownError(error);
+  },
 );
 
 // React Query global error handling
@@ -394,7 +447,7 @@ const queryCache = new QueryCache({
     const { severity, message } = getUserMessageFromError(normalized);
     toast[severity](message);
     reportErrorToSentry(normalized);
-  }
+  },
 });
 ```
 
@@ -511,20 +564,24 @@ These guidelines detail how to plan, implement, and finalize features while **ch
 **When bootstrapping a new project or adding ShadCN/Tailwind to an existing project:**
 
 1. **Always use ShadCN's init command** to set up both ShadCN and Tailwind CSS:
+
    ```bash
    pnpm dlx shadcn@latest init -d
    ```
 
 2. **Tailwind CSS version strategy:**
+
    - **Prefer v4** for new/small projects
    - **v3 is acceptable** for large projects or when in monorepo with mixed versions
    - In monorepos: v4 can be root version with v3 in specific app package.json if needed
    - Only upgrade v3→v4 in projects that aren't huge or complex
 
 3. **ShadCN components strategy:**
+
    ```bash
    pnpm dlx shadcn@latest add <component-name>
    ```
+
    - **Default approach:** Install only components you actually use (`shadcn add button dialog toast`)
    - **For component discovery:** Create a dedicated catalog/storybook app with `shadcn add --all`
    - **Per-app installation:** Always use `shadcn add <component>` to match each app's Tailwind version
@@ -604,6 +661,7 @@ src/
 ### Next.js Deployment Configuration
 
 - **Always set `basePath` when deploying to non-root paths**:
+
   ```typescript
   // For production environments with subpath deployment
   export const basePath =
@@ -618,6 +676,7 @@ src/
   ```
 
 - **Configure static exports correctly**:
+
   ```typescript
   const nextConfig: NextConfig = {
     output: "export",
@@ -629,6 +688,7 @@ src/
   ```
 
 - **Handle redirects conditionally for development vs. static export**:
+
   ```typescript
   ...(process.env.NODE_ENV === "development"
     ? {
@@ -649,6 +709,7 @@ src/
 
 - **GitHub Pages Deployment Workflow**:
   For deploying Next.js sites to GitHub Pages, use a workflow like this:
+
   ```yaml
   name: Deploy Next.js site to Pages
 
@@ -731,7 +792,9 @@ src/
           id: deployment
           uses: actions/deploy-pages@v4
   ```
+
   The `actions/configure-pages@v5` action with `static_site_generator: next` automatically:
+
   - Injects the correct `basePath` for GitHub Pages
   - Disables server-side image optimization
 
@@ -820,6 +883,7 @@ pnpm run typecheck
 Use prepare-commit-msg hooks to automatically prefix commits with JIRA issue keys.
 
 **JIRA Issue Key Integration (Basic)**:
+
 ```sh
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -828,6 +892,7 @@ $(pnpm bin)/jira-prepare-commit-msg $1
 ```
 
 **Advanced JIRA Integration (Without Dependencies)**:
+
 ```sh
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
@@ -878,6 +943,7 @@ sed -i -e "1s/^/${ISSUE_KEY}: /" "$COMMIT_MESSAGE_PATH"
 **Installation Steps**:
 
 For JIRA integration:
+
 ```bash
 # Option 1: Use jira-prepare-commit-msg package
 pnpm add -D jira-prepare-commit-msg
@@ -890,6 +956,7 @@ pnpm exec husky add .husky/prepare-commit-msg "$(pnpm bin)/jira-prepare-commit-m
 ```
 
 These hooks ensure:
+
 - Automatic JIRA issue key detection from branch names
 - Proper prefixing of commit messages with issue keys
 - Graceful handling of edge cases like merge commits and branches without issue keys
@@ -912,7 +979,7 @@ These hooks ensure:
 
   ```jsx
   // For React, use Strict Mode in development
-  import { StrictMode } from 'react';
+  import { StrictMode } from "react";
 
   function App() {
     return (
@@ -944,6 +1011,7 @@ These hooks ensure:
 ### Package Manager Selection
 
 - **Prefer pnpm** over npm or Yarn for all projects when possible:
+
   - Superior disk space efficiency with content-addressable storage
   - Strict dependency resolution that prevents phantom dependencies
   - Built-in monorepo support with workspaces
@@ -951,12 +1019,14 @@ These hooks ensure:
   - Most secure dependency resolution
 
 - **Alternatively, use Bun** for projects where you can accept ecosystem trade-offs for performance:
+
   - Extremely fast package installation and runtime
   - Built-in test runner and bundler
   - Native TypeScript support
   - Growing npm package compatibility (verify critical dependencies work before adopting)
 
 - **Setup for pnpm**:
+
   ```json
   // package.json
   {
@@ -965,6 +1035,7 @@ These hooks ensure:
   ```
 
 - **Lockfile guidance**:
+
   - Commit `pnpm-lock.yaml` or `bun.lockb` to version control
   - Never modify lockfiles manually
   - Update dependencies with `pnpm update` or appropriate commands
@@ -979,6 +1050,7 @@ These hooks ensure:
 #### Initial Setup
 
 - **When initializing a new repository**, use LTS Node and create .nvmrc:
+
   ```bash
   # Switch to LTS version
   nvm use --lts
@@ -992,6 +1064,7 @@ These hooks ensure:
 #### Dynamic Version Management
 
 - **Use `.nvmrc` to drive `package.json` settings** for CI/CD compatibility:
+
   ```json
   // package.json
   {
@@ -1004,6 +1077,7 @@ These hooks ensure:
   ```
 
 - For CI/CD pipelines, use dynamic version extraction:
+
   ```yaml
   # GitHub Actions workflow example
   jobs:
@@ -1016,17 +1090,19 @@ These hooks ensure:
         - uses: actions/setup-node@v4
           with:
             node-version: ${{ env.NODE_VERSION }}
-            cache: 'pnpm'
+            cache: "pnpm"
         - run: corepack enable
         - run: pnpm install --frozen-lockfile
   ```
 
 - **Enforce Node.js version usage** in development with:
+
   ```bash
   pnpm exec check-node-version --package
   ```
 
 - **When checking out a new codebase**, immediately look for and if necessary add:
+
   - `.nvmrc` for Node.js version management
   - `"packageManager"` field in package.json
   - Proper lockfile for the selected package manager
@@ -1036,6 +1112,7 @@ These hooks ensure:
 ### Monorepo Configuration
 
 - Use **Turborepo** for monorepo workspaces that need advanced build optimizations and caching:
+
   ```json
   // turbo.json
   {
@@ -1060,6 +1137,7 @@ These hooks ensure:
   ```
 
 - **For simpler monorepos** without complex build dependencies, pnpm workspaces may be sufficient:
+
   ```json
   // pnpm-workspace.yaml
   packages:
@@ -1093,6 +1171,7 @@ Use automated code generation for schema-driven development when it provides cle
 #### Core Generation Tools
 
 - **GraphQL Schema**: Use graphql-codegen for type-safe operations
+
   ```json
   {
     "scripts": {
@@ -1102,6 +1181,7 @@ Use automated code generation for schema-driven development when it provides cle
   ```
 
 - **OpenAPI/Swagger**: Generate Zod schemas and types from OpenAPI specs
+
   ```json
   {
     "scripts": {
@@ -1111,6 +1191,7 @@ Use automated code generation for schema-driven development when it provides cle
   ```
 
   Alternative: For complex API clients with React Query integration:
+
   ```json
   {
     "scripts": {
@@ -1120,6 +1201,7 @@ Use automated code generation for schema-driven development when it provides cle
   ```
 
 - **SVG Icons**: Transform SVGs into React components
+
   ```json
   {
     "scripts": {
@@ -1129,6 +1211,7 @@ Use automated code generation for schema-driven development when it provides cle
   ```
 
 - **CMS Integration**: Generate types from CMS schemas
+
   ```json
   {
     "scripts": {
@@ -1174,6 +1257,7 @@ Use automated code generation for schema-driven development when it provides cle
 #### Key Tools Configuration
 
 - **GraphQL Codegen**:
+
   ```typescript
   // codegen.ts
   export default {
@@ -1181,21 +1265,29 @@ Use automated code generation for schema-driven development when it provides cle
     documents: ["src/**/*.graphql"],
     generates: {
       "src/generated/graphql.ts": {
-        plugins: ["typescript", "typescript-operations", "typescript-react-query"],
+        plugins: [
+          "typescript",
+          "typescript-operations",
+          "typescript-react-query",
+        ],
         config: {
           fetcher: "@/lib/graphql-fetcher#fetchData",
-          enumsAsTypes: true
-        }
-      }
-    }
+          enumsAsTypes: true,
+        },
+      },
+    },
   };
   ```
 
 - **OpenAPI Codegen**:
+
   ```typescript
   // openapi-codegen.config.ts
   import { defineConfig } from "@openapi-codegen/cli";
-  import { generateSchemaTypes, generateReactQueryComponents } from "@openapi-codegen/typescript";
+  import {
+    generateSchemaTypes,
+    generateReactQueryComponents,
+  } from "@openapi-codegen/typescript";
 
   export default defineConfig({
     admin: {
@@ -1205,12 +1297,12 @@ Use automated code generation for schema-driven development when it provides cle
         const filenamePrefix = "adminApi";
         const clients = await generateReactQueryComponents(context, {
           filenamePrefix,
-          clientName: "AdminApi"
+          clientName: "AdminApi",
         });
         const schemas = await generateSchemaTypes(context, { filenamePrefix });
         return [...clients, ...schemas];
-      }
-    }
+      },
+    },
   });
   ```
 
@@ -1476,6 +1568,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
 - **Comprehensive Technical Dictionary**: Over 100 commonly used technical terms pre-approved and categorized by domain
 - **Multi-Language Support**: Configuration for projects with internationalization (Swedish, German, etc.)
 - **Smart Ignores**:
+
   - Generated code (all common output directories)
   - Build artifacts and bundle files
   - Environment and configuration files
@@ -1484,6 +1577,7 @@ Always include a `cspell.json` file in the project root to ensure consistent spe
   - Lock files from all package managers
 
 - **RegExp Pattern Ignores**: Common code patterns that frequently trigger false positives:
+
   - Import statements
   - File paths with extensions
   - Long hashes and cryptographic identifiers
@@ -1517,6 +1611,7 @@ pnpm add -D @cspell/dict-sv @cspell/dict-de-de
 ```
 
 Then update the imports section of cspell.json:
+
 ```json
 "import": [
   "@cspell/dict-sv/cspell-ext.json",
@@ -1562,6 +1657,7 @@ pnpm install -D eslint-plugin-react eslint-plugin-react-hooks
 ```
 
 **Recommended for larger projects:**
+
 ```bash
 # Import management
 pnpm install -D eslint-plugin-import-x eslint-plugin-simple-import-sort eslint-plugin-unused-imports
@@ -1571,6 +1667,7 @@ pnpm install -D eslint-plugin-promise
 ```
 
 **Project-specific additions:**
+
 ```bash
 # Next.js projects
 pnpm install -D @next/eslint-plugin-next
@@ -1601,35 +1698,41 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import simpleImportSort from "eslint-plugin-simple-import-sort";
 import unusedImports from "eslint-plugin-unused-imports";
 import globals from "globals";
-import { config as tsEslintConfig, configs as tsEslintConfigs } from "typescript-eslint";
+import {
+  config as tsEslintConfig,
+  configs as tsEslintConfigs,
+} from "typescript-eslint";
 
 // Config implementation
-export default tsEslintConfig(
-  // Base configurations
-  // TypeScript configurations
-  // Plugin configurations
-  // File-specific overrides
-);
+export default tsEslintConfig();
+// Base configurations
+// TypeScript configurations
+// Plugin configurations
+// File-specific overrides
 ```
 
 #### Plugin Purposes
 
 - **TypeScript Integration**:
+
   - `typescript-eslint` - Strict type checking rules
   - `@typescript-eslint/parser` - Enables ESLint to understand TypeScript
 
 - **React Best Practices**:
+
   - `eslint-plugin-react` - Core React patterns (component definition, prop naming)
   - `eslint-plugin-react-hooks` - Enforces Rules of Hooks
   - `eslint-plugin-react-refresh` - Optimizes for Fast Refresh compatibility
   - `eslint-plugin-react-compiler` - Ensures compatibility with React Compiler (Forget)
 
 - **Import Management**:
+
   - `eslint-plugin-import-x` - Import validation and restrictions
   - `eslint-plugin-simple-import-sort` - Consistent import ordering
   - `eslint-plugin-unused-imports` - Automatic removal of unused imports
 
 - **Framework Specific**:
+
   - `@next/eslint-plugin-next` - Next.js best practices and patterns
   - `@tanstack/eslint-plugin-query` - TanStack Query optimization rules
 
@@ -1639,11 +1742,13 @@ export default tsEslintConfig(
 #### Key Rule Configurations
 
 - **TypeScript Strictness**:
+
   - Enforced nullish coalescing over logical OR
   - Consistent type definitions per project conventions
   - Proper type imports
 
 - **React Patterns**:
+
   - Boolean prop naming convention (`isX`, `hasX`, `showX`)
   - Self-closing component enforcement
   - JSX prop sorting
@@ -1651,6 +1756,7 @@ export default tsEslintConfig(
   - Prevention of unstable nested components
 
 - **Import Organization**:
+
   - Grouping imports by source type (React, Next.js, node_modules, local)
   - Automatic removal of unused imports
   - Type import separation
@@ -1698,6 +1804,7 @@ export default tsEslintConfig(
 #### CSS Variables and Theming
 
 **CSS Variable Usage:**
+
 - **MUST** use CSS variables (e.g., `bg-muted`, `text-foreground`) instead of regular Tailwind classes (e.g., `bg-zinc-500`, `text-gray-900`)
 - Use appropriate existing CSS variables based on component purpose:
   - `bg-background text-foreground` - Main app background/text
@@ -1715,16 +1822,18 @@ export default tsEslintConfig(
 When no fitting CSS variable exists for a color need, add a new CSS variable with semantic naming:
 
 1. **Naming Convention:** `--<component>-<role>-<state>`
+
    - Component name first (e.g., `notification`, `tooltip`)
    - Role second (e.g., `border`, `foreground`, `ring`)
    - State last if needed (e.g., `success`, `warning`, `error`)
 
 2. **Example - Adding notification component variables:**
+
 ```css
 :root {
   --notification: oklch(0.98 0.05 100);
   --notification-foreground: oklch(0.22 0.02 100);
-  --notification-border: oklch(0.90 0.02 100);
+  --notification-border: oklch(0.9 0.02 100);
   --notification-border-success: oklch(0.92 0.15 142);
   --notification-border-warning: oklch(0.84 0.16 84);
 }
@@ -1747,6 +1856,7 @@ When no fitting CSS variable exists for a color need, add a new CSS variable wit
 ```
 
 3. **Usage in components:**
+
 ```tsx
 <div className="bg-notification text-notification-foreground border border-notification-border">
   <div className="border-l-4 border-l-notification-border-success">
@@ -1756,6 +1866,7 @@ When no fitting CSS variable exists for a color need, add a new CSS variable wit
 ```
 
 **Key Principles:**
+
 - Follow the `background`/`foreground` convention (background omitted in class names)
 - Ensure `tailwind.cssVariables: true` is set in `components.json`
 - Always define both light and dark mode variants
@@ -1765,26 +1876,23 @@ When no fitting CSS variable exists for a color need, add a new CSS variable wit
 Example styling pattern:
 
 ```tsx
-const componentVariants = cva(
-  "base-styles-here",
-  {
-    variants: {
-      variant: {
-        default: "variant-specific-styles",
-        secondary: "secondary-variant-styles",
-      },
-      size: {
-        sm: "small-size-styles",
-        md: "medium-size-styles",
-        lg: "large-size-styles",
-      },
+const componentVariants = cva("base-styles-here", {
+  variants: {
+    variant: {
+      default: "variant-specific-styles",
+      secondary: "secondary-variant-styles",
     },
-    defaultVariants: {
-      variant: "default",
-      size: "md",
+    size: {
+      sm: "small-size-styles",
+      md: "medium-size-styles",
+      lg: "large-size-styles",
     },
   },
-);
+  defaultVariants: {
+    variant: "default",
+    size: "md",
+  },
+});
 ```
 
 ### ShadCN/UI v4 Component Patterns & Composition
@@ -2109,7 +2217,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -2174,15 +2282,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="p-4">{children}</main>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
 
 // Collapsible mode configuration:
 <SidebarProvider defaultCollapsed={false} collapsibleMode="icon">
-  // "offcanvas" - mobile overlay
-  // "icon" - icon-only mode
-  // "none" - always expanded
-</SidebarProvider>
+  {/**  "offcanvas" - mobile overlay */}
+  {/**  "icon" - icon-only mode */}
+  {/**  "none" - always expanded */}
+</SidebarProvider>;
 
 // Cookie persistence (automatic):
 // Sidebar state persists via cookies, no additional code needed
@@ -2409,6 +2517,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 - Extract complex logic to custom hooks.
 
 **React Strict Mode Configuration:**
+
 ```typescript
 // For Next.js - add to next.config.js/ts
 const nextConfig = {
@@ -2419,7 +2528,7 @@ const nextConfig = {
 
 ```tsx
 // For other React apps - wrap your app component
-import { StrictMode } from 'react';
+import { StrictMode } from "react";
 
 function App() {
   return (
@@ -2463,7 +2572,7 @@ export const useTypedForm = <T extends z.ZodType>({
 
 ```ts
 export function getTypedFields<T extends z.ZodType>(
-  fields: Record<keyof z.infer<T>, React.ReactNode>
+  fields: Record<keyof z.infer<T>, React.ReactNode>,
 ) {
   return fields;
 }
@@ -2526,9 +2635,9 @@ import { getTypedFields, useTypedForm } from "@/lib/form";
 
 // 2. Define component props
 export function CreateEntityForm({
-  relatedData
+  relatedData,
 }: {
-  relatedData: RelatedData[]
+  relatedData: RelatedData[];
 }) {
   // 3. Get mutation hook
   const { mutateAsync: createEntity } = useCreateEntityMutation();
@@ -2696,6 +2805,7 @@ This comprehensive cache invalidation strategy is more robust than adding user-s
 All data operations should use TanStack Query (react-query). **For v5, always wrap your app in `<Suspense>` and `<ErrorBoundary>`** to handle `useSuspenseQuery`.
 
 **Required App Setup:**
+
 ```tsx
 // app/providers.tsx (or root provider)
 "use client";
@@ -2796,46 +2906,53 @@ export function useCreateEntityMutation() {
 When encountering CORS (Cross-Origin Resource Sharing) errors, follow this troubleshooting sequence:
 
 1. **First: Simplify the request to avoid preflight**
+
    - Convert to a "simple request" that doesn't trigger preflight:
      - Use only standard headers (`Accept`, `Accept-Language`, `Content-Language`, `Content-Type` with specific values)
      - Use only standard Content-Type values (`application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain`)
      - Remove custom headers when possible
      - Use standard HTTP methods (GET, POST)
+
    ```typescript
    // Before: Complex request with custom headers
-   axios.post('/api/data', data, {
+   axios.post("/api/data", data, {
      headers: {
-       'X-Custom-Header': 'value',
-       'Content-Type': 'application/json' // Triggers preflight
-     }
+       "X-Custom-Header": "value",
+       "Content-Type": "application/json", // Triggers preflight
+     },
    });
 
    // After: Simple request without custom headers
-   axios.post('/api/data',
+   axios.post(
+     "/api/data",
      new URLSearchParams(data), // Convert to form-urlencoded
      {
        headers: {
-         'Content-Type': 'application/x-www-form-urlencoded'
-       }
-     }
+         "Content-Type": "application/x-www-form-urlencoded",
+       },
+     },
    );
    ```
 
 2. **Second: Modify server CORS settings** (preferred solution)
+
    - Work with backend team to update the server's CORS configuration
    - Add your domain to the server's allowed origins list
    - Configure the server to expose necessary headers
    - Update preflight cache duration if needed
+
    ```typescript
    // Server-side Express.js example
-   import cors from 'cors';
+   import cors from "cors";
 
-   app.use(cors({
-     origin: ['https://yourfrontend.com', 'http://localhost:3000'],
-     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-     allowedHeaders: ['Content-Type', 'Authorization'],
-     credentials: true
-   }));
+   app.use(
+     cors({
+       origin: ["https://yourfrontend.com", "http://localhost:3000"],
+       methods: ["GET", "POST", "PUT", "DELETE"],
+       allowedHeaders: ["Content-Type", "Authorization"],
+       credentials: true,
+     }),
+   );
    ```
 
 3. **Only as last resort: Use a proxy**
@@ -2846,8 +2963,8 @@ When encountering CORS (Cross-Origin Resource Sharing) errors, follow this troub
      async rewrites() {
        return [
          {
-           source: '/api/:path*',
-           destination: 'https://external-api.com/:path*',
+           source: "/api/:path*",
+           destination: "https://external-api.com/:path*",
          },
        ];
      },
@@ -2860,12 +2977,14 @@ When encountering CORS (Cross-Origin Resource Sharing) errors, follow this troub
 ### State Management
 
 **Decision tree:**
+
 1. **Server state (authoritative on backend)?** → **React Query** (server state). Avoid Redux for API data.
 2. **Local to one component or small cluster?** → `useState` / `useReducer`.
 3. **Cross-cutting concern with infrequent updates (theme, auth session)?** → **React Context** (read-often, write-rarely).
 4. **Shared, frequently updated, or needs selectors/derived state across distant parts of tree?** → **Zustand** store.
 
 **Zustand rules:**
+
 - Keep stores small and focused; prefer selectors; derive rather than store
 - Persist only non-sensitive data; **validate persisted shapes with Zod** on hydrate
 - Avoid coupling stores to transport (no axios calls inside stores)
@@ -2880,12 +2999,14 @@ When encountering CORS (Cross-Origin Resource Sharing) errors, follow this troub
 **Decision Framework:** Choose the right modal approach based on your use case:
 
 #### When to use ShadCN `Dialog` directly:
+
 - **Simple, component-local modals** (settings panel, info popup)
 - **Few total modals** in the app (1-3 dialogs)
 - **Tight coupling** with parent component state is acceptable
 - **No need for Promise-style resolution** or return values
 
 #### When to use `@ebay/nice-modal-react`:
+
 - **Global modal orchestration** needed (5+ different modals)
 - **Imperative modal opening** from anywhere (async functions, mutations, services)
 - **Promise-based resolution** required (confirm dialogs, form results)
@@ -2897,50 +3018,51 @@ Use ShadCN `Dialog` for visuals, `@ebay/nice-modal-react` for orchestration:
 
 ```tsx
 // Global confirm dialog using both libraries
-import NiceModal, { useModal } from '@ebay/nice-modal-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import NiceModal, { useModal } from "@ebay/nice-modal-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-export const ConfirmDialog = NiceModal.create(({
-  title,
-  message
-}: {
-  title: string;
-  message: string;
-}) => {
-  const modal = useModal();
+export const ConfirmDialog = NiceModal.create(
+  ({ title, message }: { title: string; message: string }) => {
+    const modal = useModal();
 
-  return (
-    <Dialog open={modal.visible} onOpenChange={(v) => !v && modal.hide()}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
-        <p className="text-muted-foreground">{message}</p>
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => modal.resolve(false)}>
-            Cancel
-          </Button>
-          <Button onClick={() => modal.resolve(true)}>
-            Confirm
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-});
+    return (
+      <Dialog open={modal.visible} onOpenChange={(v) => !v && modal.hide()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground">{message}</p>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => modal.resolve(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => modal.resolve(true)}>Confirm</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  },
+);
 ```
 
 **Usage in mutations and async flows:**
+
 ```tsx
-import { useMutation } from '@tanstack/react-query';
-import NiceModal from '@ebay/nice-modal-react';
-import { axiosClient } from '@/lib/axios-client';
+import { useMutation } from "@tanstack/react-query";
+import NiceModal from "@ebay/nice-modal-react";
+import { axiosClient } from "@/lib/axios-client";
 
 function useDeleteUser() {
   return useMutation(async (userId: string) => {
     const confirmed = await NiceModal.show(ConfirmDialog, {
       title: "Delete user",
-      message: "Are you sure you want to delete this user? This action cannot be undone.",
+      message:
+        "Are you sure you want to delete this user? This action cannot be undone.",
     });
 
     if (!confirmed) return;
@@ -2951,6 +3073,7 @@ function useDeleteUser() {
 ```
 
 **Key Benefits of Hybrid Approach:**
+
 - **Consistent theming** through ShadCN components
 - **Global orchestration** through NiceModal lifecycle management
 - **Promise-based API** for clean async flows
@@ -2966,6 +3089,7 @@ function useDeleteUser() {
 - Programmatic navigation with useRouter
 
 For static exports:
+
 - Use query parameters instead of dynamic routes for data filtering and selection
 - Avoid server-side redirects or middleware
 - All dynamic data must be fetched client-side after route hydration
@@ -2995,9 +3119,9 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push("/login");
     } else if (requiredRole && user?.role !== requiredRole) {
-      router.push('/unauthorized');
+      router.push("/unauthorized");
     }
   }, [isAuthenticated, isLoading, user, router, requiredRole]);
 
@@ -3033,6 +3157,7 @@ export function ProtectedRoute({
 ### Configuration Management
 
 **Environment rules:**
+
 - Use a typed env wrapper (e.g., `@t3-oss/env-nextjs`) everywhere.
 - **Client code**: never access `process.env` directly; only use `NEXT_PUBLIC_*` from your typed wrapper.
 - **Server-only files** (route handlers, server utils): direct `process.env` reads are acceptable if validated by the wrapper at boot.
@@ -3047,24 +3172,28 @@ export function ProtectedRoute({
 4. **Handle errors** with a centralized `QueryCache` and consider logging to Sentry.
 
 ### Common libraries
+
 - `@chromia/ft4`, `postchain-client` for Chromia
 - For Ethereum/multi-chain: `connectkit`, `wagmi` (built on `viem`)
 
 ## Implementation Process
 
 1. **Planning Phase**
+
    - Define the feature scope, requirements, and acceptance criteria
    - Identify affected components, data structures, and API endpoints
    - Break down work into manageable chunks
    - Define necessary schema extensions
 
 2. **Implementation Phase**
+
    - Work incrementally on small chunks
    - Maintain consistent coding style
    - Adhere to the standards in this document
    - Test as you build
 
 3. **Review and Test Phase**
+
    - Validate against acceptance criteria
    - Ensure type safety across the implementation
    - Test error states and edge cases
@@ -3122,6 +3251,7 @@ This approach helps maintain a coherent, type-safe, and maintainable codebase wh
 **When `nx.json` exists in project root, follow these Nx-specific patterns:**
 
 **Task Execution (use Nx targets, never direct commands):**
+
 - **Build:** `pnpm nx run-many --target=build --all`
 - **Type checking:** `pnpm nx run-many --target=typecheck --all`
 - **Linting:** `pnpm nx run-many --target=lint --all -- --max-warnings=0`
@@ -3129,23 +3259,27 @@ This approach helps maintain a coherent, type-safe, and maintainable codebase wh
 - **E2E Testing:** `pnpm nx run-many --target=e2e --all`
 
 **Single Project Commands:**
+
 - `pnpm nx build my-app`
 - `pnpm nx test my-lib --watch`
 - `pnpm nx lint my-app --fix`
 
 **Key Nx Principles:**
+
 - **Always use Nx targets** for single source of truth on task definitions
 - **Leverage caching:** Nx automatically caches based on inputs/outputs
 - **Respect workspace boundaries:** Use `@nrwl/nx/enforce-module-boundaries` rules
 - **Follow affected commands:** `pnpm nx affected --target=test` for CI optimization
 
 **Tailwind Version Strategy in Nx:**
+
 - **Root workspace:** May use Tailwind v4
 - **Individual apps:** Can maintain v3 if needed (document in `/apps/<name>/README.md`)
 - **ShadCN components:** Use `shadcn add <component>` per-app to match that app's Tailwind version
 - **Component discovery:** Maintain a catalog app with `shadcn add --all` for reference, clearly labeled
 
 **Dependencies in Nx:**
+
 - **Shared libraries:** Use workspace dependencies (`"@my-org/shared-ui": "*"`)
 - **External deps:** Manage at root level when possible
 - **App-specific deps:** Keep in individual app `package.json` when needed
@@ -3155,12 +3289,14 @@ This approach helps maintain a coherent, type-safe, and maintainable codebase wh
 **When `turbo.json` exists, follow these Turborepo patterns:**
 
 **Task Execution (use Turborepo pipeline):**
+
 - **Build with dependencies:** `turbo run build --filter=...^...`
 - **Quality gate:** `turbo run format lint typecheck test --cache-dir=.turbo`
 - **Development:** `turbo run dev --filter=my-app`
 - **Affected builds:** `turbo run build --filter=[HEAD^1]`
 
 **Pipeline Configuration:**
+
 ```json
 // turbo.json
 {
@@ -3176,12 +3312,14 @@ This approach helps maintain a coherent, type-safe, and maintainable codebase wh
 ```
 
 **Key Turborepo Principles:**
+
 - **Pipeline dependencies:** Use `dependsOn: ["^build"]` for build ordering
 - **Output caching:** Specify outputs for effective caching
 - **Filter syntax:** Use `--filter=package-name` for targeted runs
 - **Global dependencies:** Include files that affect all packages
 
 **Dependencies:**
+
 - **Workspace packages:** Use `"*"` ranges for internal packages
 - **External deps:** Pin at root level when possible
 - **Generated code:** Include in `.gitignore` but specify outputs in pipeline
@@ -3191,6 +3329,7 @@ This approach helps maintain a coherent, type-safe, and maintainable codebase wh
 **When `next.config.js/ts` exists, apply these Next.js specific considerations:**
 
 **React Strict Mode:**
+
 ```typescript
 const nextConfig = {
   reactStrictMode: true,
@@ -3199,17 +3338,20 @@ const nextConfig = {
 ```
 
 **Static Export Considerations (only when `output: "export"`):**
+
 - Convert server components to client components for interactivity
 - Avoid server-side features: middleware, API routes, server actions, ISR, SSR
 - Use query parameters instead of dynamic routes for data filtering
 - All dynamic data must be client-side fetched with React Query
 
 **Deployment Configuration:**
+
 - Set `basePath` for non-root deployments
 - Configure `images.unoptimized: true` for static exports
 - Handle redirects conditionally (development vs static export)
 
 **File-based Routing:**
+
 - Page components in `app/` directory
 - Use `"use client"` directive for interactive components
 - Leverage Next.js App Router patterns
